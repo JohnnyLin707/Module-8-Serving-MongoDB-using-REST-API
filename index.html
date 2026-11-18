@@ -37,6 +37,15 @@
   .card.cyan .go { color: var(--cyan); }
   .card.amber .go { color: var(--amber); }
   @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+
+  .section-title { font-size: 13px; letter-spacing: 2px; color: #8ea0b8; margin: 0 0 14px; }
+  .materials { margin-top: 48px; }
+  .card.violet:hover { border-color: #a78bfa; }
+  .card.violet h2, .card.violet .go { color: #a78bfa; }
+  .card.green:hover { border-color: #4ade80; }
+  .card.green h2, .card.green .go { color: #4ade80; }
+  .card.blue:hover { border-color: #60a5fa; }
+  .card.blue h2, .card.blue .go { color: #60a5fa; }
 </style>
 </head>
 <body>
@@ -57,6 +66,30 @@
       <span class="go">打开页面 →</span>
     </a>
   </div>
+
+  <section class="materials">
+    <p class="section-title">课程教材 · PDF 转 HTML 与实操指南</p>
+    <div class="cards">
+      <a class="card violet" href="rest-api-tutorial.html">
+        <div class="kicker">TUTORIAL 01 · 29 PAGES · 17 STEPS</div>
+        <h2>Build a REST API with Express</h2>
+        <p>REST 基础与 Express 实战教程：从认识 REST API 到路由、状态码、错误处理，完整 HTML 版教材。</p>
+        <span class="go">阅读教材 →</span>
+      </a>
+      <a class="card green" href="mongodb-mongoose-tutorial.html">
+        <div class="kicker">TUTORIAL 02 · 30 PAGES · 13 STEPS</div>
+        <h2>MongoDB and Mongoose, Step by Step</h2>
+        <p>MongoDB 与 Mongoose 实战教程：从文档模型、Atlas 到 CRUD 路由与模块化，完整 HTML 版教材。</p>
+        <span class="go">阅读教材 →</span>
+      </a>
+      <a class="card blue" href="mongodb-testing-guide.html">
+        <div class="kicker">GUIDE · CHECKPOINTS · 17 步</div>
+        <h2>用 MongoDB 测试 book-store-api-checkpoints</h2>
+        <p>针对 step-05 → step-13 与 final 逐个核对：注册 Atlas、配 .env、seed 数据、mongosh 验证、curl / Thunder Client 测试全部接口。</p>
+        <span class="go">开始实操 →</span>
+      </a>
+    </div>
+  </section>
 </div>
 </body>
 </html>

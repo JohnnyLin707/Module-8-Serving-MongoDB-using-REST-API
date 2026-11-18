@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a REST API with Express · HTML 教材</title>
+<style>
+  :root { --accent: #38bdf8; --accent-line: #1d4a5e; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0b0f14; color: #dce6f2; line-height: 1.75;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 24px 80px; }
+  header.hero { border-bottom: 1px solid #263244; padding-bottom: 24px; }
+  .back { font-size: 13px; color: #8ea0b8; }
+  .kicker { color: var(--accent); font-size: 12px; letter-spacing: 2px; margin-top: 14px; }
+  h1 { font-size: 30px; margin: 6px 0 6px; }
+  .subtitle { color: #8ea0b8; margin: 0; font-size: 15px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .jump, button {
+    background: #161f2b; color: #dce6f2; border: 1px solid #263244;
+    border-radius: 8px; padding: 7px 13px; font-size: 13px; cursor: pointer;
+  }
+  .jump:hover, button:hover { border-color: var(--accent); color: var(--accent); }
+  .toc {
+    margin: 22px 0 30px; padding: 16px 20px; background: #121821;
+    border: 1px solid #263244; border-radius: 12px;
+  }
+  .toc h2 { font-size: 15px; margin: 0 0 10px; color: #8ea0b8; }
+  .toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+  .toc li { break-inside: avoid; font-size: 13px; margin: 3px 0; }
+  .page {
+    background: #121821; border: 1px solid #263244; border-radius: 12px;
+    padding: 22px 26px; margin-bottom: 20px; scroll-margin-top: 20px;
+  }
+  .page-label {
+    font-size: 11px; color: #64748b; letter-spacing: 1px;
+    border-bottom: 1px dashed #263244; padding-bottom: 8px; margin-bottom: 16px;
+  }
+  h2.part { font-size: 20px; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 12px; margin: 30px 0 16px; }
+  h3.step-heading { font-size: 17px; margin: 26px 0 10px; color: #f1f5f9; }
+  .step-label { color: var(--accent); font-size: 12px; margin-right: 10px; border: 1px solid var(--accent-line); border-radius: 999px; padding: 1px 9px; }
+  p { font-size: 14.5px; margin: 10px 0; }
+  ul, ol { padding-left: 24px; font-size: 14.5px; }
+  li { margin: 5px 0; }
+  pre.code {
+    background: #080c11; border: 1px solid #263244; border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  code { font-family: inherit; }
+  .callout {
+    background: rgba(74,222,128,.06); border-left: 3px solid #4ade80;
+    border-radius: 8px; padding: 12px 16px; margin: 16px 0;
+  }
+  .callout strong { color: #4ade80; font-size: 12px; letter-spacing: 1px; }
+  .callout p { margin: 4px 0 0; font-size: 14px; }
+  .checkpoint {
+    background: #080c11; border: 1px dashed var(--accent-line); border-radius: 8px;
+    padding: 9px 14px; margin: 14px 0; font-size: 13px;
+  }
+  .checkpoint span { color: #8ea0b8; margin-right: 10px; }
+  .figure { margin: 16px 0; }
+  .figure-box {
+    background: #080c11; border: 1px solid #263244; border-radius: 8px;
+    padding: 18px; color: #8ea0b8; font-size: 13px; text-align: center;
+  }
+  .figure-box a { margin-left: 12px; font-size: 12px; }
+  figcaption { color: #8ea0b8; font-size: 12.5px; margin-top: 6px; text-align: center; }
+  details.raw { border: 1px solid #263244; border-radius: 8px; margin-top: 20px; background: #080c11; }
+  details.raw summary { cursor: pointer; padding: 8px 14px; font-size: 12px; color: #8ea0b8; }
+  details.raw pre { margin: 0; padding: 14px; font-size: 12px; color: #94a3b8; white-space: pre-wrap; word-break: break-word; }
+  footer { color: #8ea0b8; font-size: 13px; border-top: 1px solid #263244; margin-top: 30px; padding-top: 16px; }
+  @media (max-width: 700px) { .toc ol { columns: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <a class="back" href="index.html">← 返回教材首页</a>
+    <div class="kicker">CSIS 3380 · MODULE 9 · TUTORIAL</div>
+    <h1>Build a REST API with Express</h1>
+    <p class="subtitle">A step-by-step tutorial: the Quoote API</p>
+    <div class="toolbar">
+      <a class="jump" href="Build-a-REST-API-with-Express.pdf" target="_blank">打开原始 PDF ↗</a>
+      <a class="jump" href="#page-1">回到第 1 页</a>
+      <button onclick="document.querySelectorAll('details.raw').forEach(d=>d.open=true)">展开全部原页文本</button>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h2>步骤目录（17 个 Step）</h2>
+    <ol><li><a href="#step-1">Step 1: Look at a real REST API (5 min)</a></li><li><a href="#step-2">Step 2: Plan the Quote API (5 min)</a></li><li><a href="#step-3">Step 3: Open the starter and run it (5 min)</a></li><li><a href="#step-4">Step 4: Your first JSON route (5 min)</a></li><li><a href="#step-5">Step 5: GET all quotes, the quick way (5 min)</a></li><li><a href="#step-6">Step 6: GET one quote with a route parameter (5 min)</a></li><li><a href="#step-7">Step 7: Use records.js with async / await (8 min)</a></li><li><a href="#step-8">Step 8: Status codes: send 404 when a quote does not exist (5 min)</a></li><li><a href="#step-9">Step 9: Test your API with an API tester (5 min)</a></li><li><a href="#step-10">Step 10: POST: create a new quote (8 min)</a></li><li><a href="#step-11">Step 11: Validate the body: 400 Bad Request (4 min)</a></li><li><a href="#step-12">Step 12: try / catch: 500 Internal Server Error (4 min)</a></li><li><a href="#step-13">Step 13: PUT: update a quote (5 min)</a></li><li><a href="#step-14">Step 14: DELETE: remove a quote (4 min)</a></li><li><a href="#step-15">Step 15: A random quote, and why route order matters (5 min)</a></li><li><a href="#step-16">Step 16: Query strings: search by author (5 min)</a></li><li><a href="#step-17">Step 17: One place for errors: the 404 and error-handling middleware (5 min)</a></li></ol>
+  </nav>
+
+  <main>
+<section class="page" id="page-1"><div class="page-label">第 1 页 / 共 29 页</div><p>Build a REST API with Express A step-by-step tutorial: the Quoote API In this tutorial you build a small but complete REST API for famous quotes. When you finish, any client (a browser, an API tester, later a React app) can read all quotes or one quote, create a new quote, update it, delete it, ask for a random quote, and search by author. Every reply is JSON with the right HTTP status code, and errors are handled in one place. It puts into practice the notes Introduction to REST APIs and Implementing Using Express: resources and endpoints, the four HTTP methods, query strings, headers, status codes, async/await, try/catch and error-handling middleware. It uses the same quote data and the same records.js file as the class folders S1-1 to S4-2. Part Steps What you do About A 1–2 Look at a real REST API, then plan yours 10 min B 3–4 Start the project, send your first JSON 10 min C 5–8 READ: GET all quotes and one quote, async/await, 404 20 min D 9 Install and use an API tester 5 min E 10–14 CREATE, UPDATE, DELETE: POST, PUT, DELETE, 201/204/400/500 25 min F 15–17 Random quote and route order, query strings, error handling 15 min Wrap-up and self-check 5 min Total about 1 h 30 min W H A T  Y O U  N E E D Node.js 20 or newer (node -v), VS Code, Chrome, and the starter folder quote-api from the course page. Each step has a matching folder in checkpoints/: if you get lost, compare your app.js with that step&#x27;s app.js, or copy it and carry on.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>C S I S  3 3 8 0  ·  M O D U L E  9  ·  T U T O R I A L
+Build a REST API with Express
+A step-by-step tutorial: the Quoote API
+In this tutorial you build a small but complete REST API for famous quotes. When you finish, any client (a 
+browser, an API tester, later a React app) can read all quotes or one quote, create a new quote, update 
+it, delete it, ask for a random quote, and search by author. Every reply is JSON with the right HTTP status 
+code, and errors are handled in one place.
+It puts into practice the notes Introduction to REST APIs and Implementing Using Express: resources and 
+endpoints, the four HTTP methods, query strings, headers, status codes, async/await, try/catch 
+and error-handling middleware. It uses the same quote data and the same records.js file as the class 
+folders S1-1 to S4-2.
+Part Steps What you do About
+A 1–2 Look at a real REST API, then plan yours 10 min
+B 3–4 Start the project, send your first JSON 10 min
+C 5–8 READ: GET all quotes and one quote, async/await, 
+404
+20 min
+D 9 Install and use an API tester 5 min
+E 10–14 CREATE, UPDATE, DELETE: POST, PUT, DELETE, 
+201/204/400/500
+25 min
+F 15–17 Random quote and route order, query strings, error 
+handling
+15 min
+Wrap-up and self-check 5 min
+Total about 1 h 30 min
+W H A T  Y O U  N E E D
+Node.js 20 or newer (node -v), VS Code, Chrome, and the starter folder quote-api from the course 
+page. Each step has a matching folder in checkpoints/: if you get lost, compare your app.js with that 
+step&#x27;s app.js, or copy it and carry on.
+1</pre></details></section>
+<section class="page" id="page-2"><div class="page-label">第 2 页 / 共 29 页</div><h2 id="part-Part-A-What-a-REST-API-is">Part A: What a REST API is</h2>
+<h3 id="step-1" class="step-heading"><span class="step-label">Step 1</span>Look at a real REST API (5 min)</h3>
+<p>A normal website sends finished HTML pages to a browser. A REST API sends only the data, usually as JSON, and lets each client build its own screen. That way one back end can serve a website, a phone app and other servers at the same time.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 1<a href="Build-a-REST-API-with-Express.pdf#page=2" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a traditional web app sends HTML; a REST API sends JSON that any client can use</figcaption></figure>
+<ol><li>Open Chrome and go to https://randomuser.me/api/?results=1&amp;nat=ca</li><li>Tick Pretty-print at the top of the page. You get a random (made-up) person as JSON: no HTML, no styling, only data.</li><li>Reload the page. A new person arrives. The server does not remember you between requests: this is what stateless means. Every request must carry everything the server needs.</li><li>Change results=1 to results=3 and press Enter. You now get three people.</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part A: What a REST API is
+Step 1: Look at a real REST API (5 min)
+A normal website sends finished HTML pages to a browser. A REST API sends only the data, usually as 
+JSON, and lets each client build its own screen. That way one back end can serve a website, a phone app 
+and other servers at the same time.
+Figure 1 — a traditional web app sends HTML; a REST API sends JSON that any client can use
+1. Open Chrome and go to https://randomuser.me/api/?results=1&amp;nat=ca
+2. Tick Pretty-print at the top of the page. You get a random (made-up) person as JSON: no HTML, no 
+styling, only data.
+3. Reload the page. A new person arrives. The server does not remember you between requests: this 
+is what stateless means. Every request must carry everything the server needs.
+4. Change results=1 to results=3 and press Enter. You now get three people.
+2</pre></details></section>
+<section class="page" id="page-3"><div class="page-label">第 3 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 2<a href="Build-a-REST-API-with-Express.pdf#page=3" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a public REST API in the browser: the reply is JSON data only</figcaption></figure>
+<p>The part after ? is the query string: a list of key=value pairs joined with &amp;. Look at how a request to an API is built:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 3<a href="Build-a-REST-API-with-Express.pdf#page=3" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the parts of a request: method, host, path (the endpoint) and query string</figcaption></figure>
+<ul><li>The resource is the kind of thing the API manages (games, players, quotes).</li><li>An endpoint is a URL for that resource: either the whole collection (/games) or one item in it (/games/1234).</li><li>The action is not in the URL. It is the HTTP method: GET reads, POST creates, PUT updates, DELETE deletes. These four actions are often called CRUD (Create, Read, Update, Delete).</li></ul><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 2 — a public REST API in the browser: the reply is JSON data only
+The part after ? is the query string: a list of key=value pairs joined with &amp;. Look at how a request to an 
+API is built:
+Figure 3 — the parts of a request: method, host, path (the endpoint) and query string
+• The resource is the kind of thing the API manages (games, players, quotes).
+• An endpoint is a URL for that resource: either the whole collection (/games) or one item in it 
+(/games/1234).
+• The action is not in the URL. It is the HTTP method: GET reads, POST creates, PUT updates, 
+DELETE deletes. These four actions are often called CRUD (Create, Read, Update, Delete).
+3</pre></details></section>
+<section class="page" id="page-4"><div class="page-label">第 4 页 / 共 29 页</div><aside class="callout"><strong>CHECKYOURSELF</strong><p>In https://api.github.com/search/repositories?q=javascript, what is the path and what is the query string? (Path: /search/repositories. Query string: q=javascript.)</p></aside>
+<h3 id="step-2" class="step-heading"><span class="step-label">Step 2</span>Plan the Quote API (5 min)</h3>
+<p>Before writing code, plan the endpoints: one resource (quotes), six endpoints. Note that POST goes to the collection (you add to the list), while PUT and DELETE go to one item.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 4<a href="Build-a-REST-API-with-Express.pdf#page=4" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the plan for the Quote API, with the status code for success and for failure</figcaption></figure>
+<p>Here is how the pieces of your project work together. Keep this picture in mind all session:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 5<a href="Build-a-REST-API-with-Express.pdf#page=4" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>one request from the client, through the routes in app.js, to records.js and data.json</figcaption></figure>
+<p>You will write the plan into app.js as comments in Step 3, so it guides you as you code.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>C H E C K  Y O U R S E L F
+In https://api.github.com/search/repositories?q=javascript, what is the path and what is 
+the query string? (Path: /search/repositories. Query string: q=javascript.)
+Step 2: Plan the Quote API (5 min)
+Before writing code, plan the endpoints: one resource (quotes), six endpoints. Note that POST goes to 
+the collection (you add to the list), while PUT and DELETE go to one item.
+Figure 4 — the plan for the Quote API, with the status code for success and for failure
+Here is how the pieces of your project work together. Keep this picture in mind all session:
+Figure 5 — one request from the client, through the routes in app.js, to records.js and data.json
+You will write the plan into app.js as comments in Step 3, so it guides you as you code.
+4</pre></details></section>
+<section class="page" id="page-5"><div class="page-label">第 5 页 / 共 29 页</div><h2 id="part-Part-B-Start-the-project">Part B: Start the project</h2>
+<h3 id="step-3" class="step-heading"><span class="step-label">Step 3</span>Open the starter and run it (5 min)</h3>
+<ol><li>Unzip quote-api-starter.zip and open the quote-api folder in VS Code (File › Open Folder…).</li><li>Look at the files:</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 6<a href="Build-a-REST-API-with-Express.pdf#page=5" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the starter project</figcaption></figure>
+<ol><li>Open data.json. It holds eight quotes in an array called records. Each one has an id, a quote and an author.</li><li>Open records.js and read the comments. It has six functions: getQuotes, getQuote(id), getRandomQuote, createQuote(newRecord), updateQuote(quote) and deleteQuote(record). Each one reads or writes data.json and returns a Promise. You will use them, not change them.</li><li>Open a terminal in VS Code (Terminal › New Terminal) and run:</li></ol>
+<pre class="code"><code>npm install
+npm start</code></pre><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part B: Start the project
+Step 3: Open the starter and run it (5 min)
+1. Unzip quote-api-starter.zip and open the quote-api folder in VS Code (File › Open 
+Folder…).
+2. Look at the files:
+Figure 6 — the starter project
+3. Open data.json. It holds eight quotes in an array called records. Each one has an id, a 
+quote and an author.
+4. Open records.js and read the comments. It has six functions: getQuotes, getQuote(id), 
+getRandomQuote, createQuote(newRecord), updateQuote(quote) and 
+deleteQuote(record). Each one reads or writes data.json and returns a Promise. You will 
+use them, not change them.
+5. Open a terminal in VS Code (Terminal › New Terminal) and run:
+ 
+npm install
+npm start
+ 
+5</pre></details></section>
+<section class="page" id="page-6"><div class="page-label">第 6 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 7<a href="Build-a-REST-API-with-Express.pdf#page=6" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>npm install, then npm start</figcaption></figure>
+<pre class="code"><code>npm start runs node --watch app.js: every time you save app.js, the server restarts by itself.
+Leave this terminal running all session. To stop the server, press Ctrl + C.</code></pre>
+<ol><li>Paste the plan from Figure 4 into app.js, just under const app = express();, as comments:</li></ol>
+<pre class="code"><code>// ------------------------------------------------------------ the plan
+// Send a GET request to /quotes to READ a list of quotes
+// Send a GET request to /quotes/random to READ (view) a random quote
+// Send a GET request to /quotes/:id to READ (view) a quote
+// Send a POST request to /quotes to CREATE a new quote
+// Send a PUT request to /quotes/:id to UPDATE (edit) a quote
+// Send a DELETE request to /quotes/:id to DELETE a quote</code></pre>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-02-plan</p></aside>
+<h3 id="step-4" class="step-heading"><span class="step-label">Step 4</span>Your first JSON route (5 min)</h3>
+<p>A route is an HTTP method plus a path plus a function. The function gets the request (req) and the response (res). Until now you have used res.send() to send HTML. An API uses res.json().</p>
+<ol><li>Add this route under the plan:</li></ol>
+<pre class="code"><code>// A first JSON route</code></pre>
+<pre class="code"><code>app.get(&#x27;/greetings&#x27;, (req, res) =&gt; {
+  res.json({ greeting: &#x27;Hello World!!!&#x27; });
+});</code></pre>
+<ol><li>Save, then open http://localhost:3000/greetings in Chrome and tick Pretty-print.</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 7 — npm install, then npm start
+npm start runs node --watch app.js: every time you save app.js, the server restarts by itself. 
+Leave this terminal running all session. To stop the server, press Ctrl + C.
+6. Paste the plan from Figure 4 into app.js, just under const app = express();, as 
+comments:
+ 
+// ------------------------------------------------------------ the plan
+// Send a GET request to /quotes to READ a list of quotes
+// Send a GET request to /quotes/random to READ (view) a random quote
+// Send a GET request to /quotes/:id to READ (view) a quote
+// Send a POST request to /quotes to CREATE a new quote
+// Send a PUT request to /quotes/:id to UPDATE (edit) a quote
+// Send a DELETE request to /quotes/:id to DELETE a quote
+ 
+C H E C K P O I N T
+checkpoints/step-02-plan
+Step 4: Your first JSON route (5 min)
+A route is an HTTP method plus a path plus a function. The function gets the request (req) and the 
+response (res). Until now you have used res.send() to send HTML. An API uses res.json().
+1. Add this route under the plan:
+ 
+// A first JSON route
+app.get(&#x27;/greetings&#x27;, (req, res) =&gt; {
+  res.json({ greeting: &#x27;Hello World!!!&#x27; });
+});
+ 
+2. Save, then open http://localhost:3000/greetings in Chrome and tick Pretty-print.
+6</pre></details></section>
+<section class="page" id="page-7"><div class="page-label">第 7 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 8<a href="Build-a-REST-API-with-Express.pdf#page=7" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>your first API reply</figcaption></figure>
+<pre class="code"><code>res.json() does two things: it turns the object into a JSON string, and it sets the response header
+Content-Type: application/json, which tells the client what kind of data is coming. You can
+see the headers with curl -i (on Windows, use curl.exe -i in PowerShell):</code></pre>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 9<a href="Build-a-REST-API-with-Express.pdf#page=7" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the status line, the headers and the body of the reply</figcaption></figure>
+<p>The first line holds the status code: 200 OK. Express sends 200 unless you say otherwise.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-04-greetings</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 8 — your first API reply
+res.json() does two things: it turns the object into a JSON string, and it sets the response header 
+Content-Type: application/json, which tells the client what kind of data is coming. You can 
+see the headers with curl -i (on Windows, use curl.exe -i in PowerShell):
+Figure 9 — the status line, the headers and the body of the reply
+The first line holds the status code: 200 OK. Express sends 200 unless you say otherwise.
+C H E C K P O I N T
+checkpoints/step-04-greetings
+7</pre></details></section>
+<section class="page" id="page-8"><div class="page-label">第 8 页 / 共 29 页</div><h2 id="part-Part-C-READ-the-GET-routes">Part C: READ: the GET routes</h2>
+<h3 id="step-5" class="step-heading"><span class="step-label">Step 5</span>GET all quotes, the quick way (5 min)</h3>
+<p>The fastest way to get at the data is to load data.json straight into a variable.</p>
+<ol><li>At the top of app.js, under the express line, add:</li></ol>
+<pre class="code"><code>const data = require(&#x27;./data.json&#x27;);</code></pre>
+<ol><li>Add the first route from the plan:</li></ol>
+<pre class="code"><code>// Send a GET request to /quotes to READ a list of quotes</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes&#x27;, (req, res) =&gt; {
+  res.json(data.records);
+});</code></pre>
+<ol><li>Open http://localhost:3000/quotes. You get an array of eight quote objects.</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 10<a href="Build-a-REST-API-with-Express.pdf#page=8" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>GET /quotes returns the collection as a JSON array</figcaption></figure><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part C: READ: the GET routes
+Step 5: GET all quotes, the quick way (5 min)
+The fastest way to get at the data is to load data.json straight into a variable.
+1. At the top of app.js, under the express line, add:
+ 
+const data = require(&#x27;./data.json&#x27;);
+ 
+2. Add the first route from the plan:
+ 
+// Send a GET request to /quotes to READ a list of quotes
+app.get(&#x27;/quotes&#x27;, (req, res) =&gt; {
+  res.json(data.records);
+});
+ 
+3. Open http://localhost:3000/quotes. You get an array of eight quote objects.
+Figure 10 — GET /quotes returns the collection as a JSON array
+8</pre></details></section>
+<section class="page" id="page-9"><div class="page-label">第 9 页 / 共 29 页</div><aside class="callout"><strong>WHYDATA.RECORDS?</strong><p>data.json holds an object, { &quot;records&quot;: [ ... ] }. A client asking for the collection expects the array itself, so we send data.records.</p></aside>
+<h3 id="step-6" class="step-heading"><span class="step-label">Step 6</span>GET one quote with a route parameter (5 min)</h3>
+<p>/quotes/2048 should return only the quote whose id is 2048. In Express, :id in a path is a route parameter: whatever is in that part of the URL arrives in req.params.id.</p>
+<ol><li>Add:</li></ol>
+<pre class="code"><code>// Send a GET request to /quotes/:id to READ (view) a quote</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes/:id&#x27;, (req, res) =&gt; {
+  const quote = data.records.find(q =&gt; q.id == req.params.id);
+  res.json(quote);
+});</code></pre>
+<ol><li>Open http://localhost:3000/quotes/2048.</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 11<a href="Build-a-REST-API-with-Express.pdf#page=9" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>GET /quotes/2048 returns one object</figcaption></figure>
+<aside class="callout"><strong>WHY==ANDNOT===?</strong><p>req.params.id is always a string (&quot;2048&quot;) but the id in the data is a number (2048). == converts before comparing. (Number(req.params.id) === would work too.) 3. Now try an id that does not exist: http://localhost:3000/quotes/1. The page is empty. find() returned undefined, and the status is still 200 OK: the API claims all is well and sends nothing. You will fix that in Step 8.</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>W H Y  D A T A . R E C O R D S ?
+data.json holds an object, { &quot;records&quot;: [ ... ] }. A client asking for the collection expects the 
+array itself, so we send data.records.
+Step 6: GET one quote with a route parameter (5 min)
+/quotes/2048 should return only the quote whose id is 2048. In Express, :id in a path is a route 
+parameter: whatever is in that part of the URL arrives in req.params.id.
+1. Add:
+ 
+// Send a GET request to /quotes/:id to READ (view) a quote
+app.get(&#x27;/quotes/:id&#x27;, (req, res) =&gt; {
+  const quote = data.records.find(q =&gt; q.id == req.params.id);
+  res.json(quote);
+});
+ 
+2. Open http://localhost:3000/quotes/2048.
+Figure 11 — GET /quotes/2048 returns one object
+W H Y  = =  A N D  N O T  = = = ?
+req.params.id is always a string (&quot;2048&quot;) but the id in the data is a number (2048). == converts 
+before comparing. (Number(req.params.id) === would work too.)
+3. Now try an id that does not exist: http://localhost:3000/quotes/1. The page is empty. 
+find() returned undefined, and the status is still 200 OK: the API claims all is well and sends 
+nothing. You will fix that in Step 8.
+9</pre></details></section>
+<section class="page" id="page-10"><div class="page-label">第 10 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 12<a href="Build-a-REST-API-with-Express.pdf#page=10" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>an id that does not exist: an empty page, and still 200 OK</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-06-get-one-quote</p></aside>
+<h3 id="step-7" class="step-heading"><span class="step-label">Step 7</span>Use records.js with async / await (8 min)</h3>
+<p>require(&#x27;./data.json&#x27;) reads the file once, when the server starts. If a quote is added later, data would not know. A real app asks its database every time, and a database is asynchronous: the answer comes back later, as a Promise. records.js behaves the same way, so our routes will be ready for MongoDB next session.</p>
+<ol><li>Replace the line const data = require(&#x27;./data.json&#x27;); with:</li></ol>
+<pre class="code"><code>const records = require(&#x27;./records&#x27;);</code></pre>
+<ol><li>First, try it without await. Change the /quotes route to:</li></ol>
+<pre class="code"><code>app.get(&#x27;/quotes&#x27;, (req, res) =&gt; {
+  const data = records.getQuotes();
+  res.json(data);
+});</code></pre>
+<ol><li>Open http://localhost:3000/quotes. You get {}, an empty object. Why?</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 12 — an id that does not exist: an empty page, and still 200 OK
+C H E C K P O I N T
+checkpoints/step-06-get-one-quote
+Step 7: Use records.js with async / await (8 min)
+require(&#x27;./data.json&#x27;) reads the file once, when the server starts. If a quote is added later, 
+data would not know. A real app asks its database every time, and a database is asynchronous: the 
+answer comes back later, as a Promise. records.js behaves the same way, so our routes will be 
+ready for MongoDB next session.
+1. Replace the line const data = require(&#x27;./data.json&#x27;); with:
+ 
+const records = require(&#x27;./records&#x27;);
+ 
+2. First, try it without await. Change the /quotes route to:
+ 
+app.get(&#x27;/quotes&#x27;, (req, res) =&gt; {
+  const data = records.getQuotes();
+  res.json(data);
+});
+ 
+3. Open http://localhost:3000/quotes. You get {}, an empty object. Why?
+10</pre></details></section>
+<section class="page" id="page-11"><div class="page-label">第 11 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 13<a href="Build-a-REST-API-with-Express.pdf#page=11" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>without await the route sends a pending Promise, which turns into {}</figcaption></figure>
+<ol><li>Fix it with async / await: mark the route function async, and await the call.</li></ol>
+<pre class="code"><code>// Send a GET request to /quotes to READ a list of quotes</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  const data = await records.getQuotes();
+  res.json(data.records);
+});</code></pre>
+<ol><li>Do the same for /quotes/:id. records.getQuote(id) does the find() for you:</li></ol>
+<pre class="code"><code>// Send a GET request to /quotes/:id to READ (view) a quote</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  const quote = await records.getQuote(req.params.id);
+  res.json(quote);
+});</code></pre>
+<ol><li>Test both URLs again. They work as before, but now read the file on every request.</li></ol>
+<aside class="callout"><strong>RULEOFTHUMB</strong><p>Every records. call needs await in front of it, and every route that uses await needs async in front of its function.</p></aside>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-07-records-async-await</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 13 — without await the route sends a pending Promise, which turns into {}
+4. Fix it with async / await: mark the route function async, and await the call.
+ 
+// Send a GET request to /quotes to READ a list of quotes
+app.get(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  const data = await records.getQuotes();
+  res.json(data.records);
+});
+ 
+5. Do the same for /quotes/:id. records.getQuote(id) does the find() for you:
+ 
+// Send a GET request to /quotes/:id to READ (view) a quote
+app.get(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  const quote = await records.getQuote(req.params.id);
+  res.json(quote);
+});
+ 
+6. Test both URLs again. They work as before, but now read the file on every request.
+R U L E  O F  T H U M B
+Every records. call needs await in front of it, and every route that uses await needs async in front of 
+its function.
+C H E C K P O I N T
+checkpoints/step-07-records-async-await
+11</pre></details></section>
+<section class="page" id="page-12"><div class="page-label">第 12 页 / 共 29 页</div><h3 id="step-8" class="step-heading"><span class="step-label">Step 8</span>Status codes: send 404 when a quote does not exist (5 min)</h3>
+<p>The status code is how an API tells the client what happened, before the client even reads the body. The first digit gives the family:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 14<a href="Build-a-REST-API-with-Express.pdf#page=12" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the four families of HTTP status codes</figcaption></figure>
+<pre class="code"><code>res.status(code) sets the code, and you chain .json(...) on to it. Change the /quotes/:id
+route so a missing quote gives 404 Not Found and a message:</code></pre>
+<pre class="code"><code>// Send a GET request to /quotes/:id to READ (view) a quote</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  const quote = await records.getQuote(req.params.id);
+  if (quote) {
+    res.json(quote);
+  } else {
+    res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+  }
+});</code></pre>
+<p>Open http://localhost:3000/quotes/1 again: now the client gets a clear answer.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 15<a href="Build-a-REST-API-with-Express.pdf#page=12" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a missing quote now gives 404 and a JSON message</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-08-status-404</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Step 8: Status codes: send 404 when a quote does not exist (5 min)
+The status code is how an API tells the client what happened, before the client even reads the body. The 
+first digit gives the family:
+Figure 14 — the four families of HTTP status codes
+res.status(code) sets the code, and you chain .json(...) on to it. Change the /quotes/:id 
+route so a missing quote gives 404 Not Found and a message:
+ 
+// Send a GET request to /quotes/:id to READ (view) a quote
+app.get(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  const quote = await records.getQuote(req.params.id);
+  if (quote) {
+    res.json(quote);
+  } else {
+    res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+  }
+});
+ 
+Open http://localhost:3000/quotes/1 again: now the client gets a clear answer.
+Figure 15 — a missing quote now gives 404 and a JSON message
+C H E C K P O I N T
+checkpoints/step-08-status-404
+12</pre></details></section>
+<section class="page" id="page-13"><div class="page-label">第 13 页 / 共 29 页</div><h2 id="part-Part-D-An-API-tester">Part D: An API tester</h2>
+<h3 id="step-9" class="step-heading"><span class="step-label">Step 9</span>Test your API with an API tester (5 min)</h3>
+<p>A browser address bar can only send GET requests. To send POST, PUT and DELETE, with a JSON body, you need an API tester. Pick one: Tool How to get it Thunder Client In VS Code: Extensions (Ctrl/Cmd + Shift + X), search Thunder Client, Install. A lightning icon appears in the side bar. Postman Download the free desktop app from postman.com (or use it in the browser with the desktop agent). Insomnia Free desktop app from insomnia.rest. They all look much the same: a method menu, a URL box, a Send button, and tabs for the request Body and Headers. The response, with its status and body, appears below.</p>
+<ol><li>Open your tester and start a New Request.</li><li>Leave the method on GET, type http://localhost:3000/quotes/2048, and press Send.</li><li>Check that you see 200 OK and the quote. Then try /quotes/1 and look for 404.</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 16<a href="Build-a-REST-API-with-Express.pdf#page=13" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the parts of an API tester, sending GET /quotes/2048</figcaption></figure>
+<p>T I P Save each request (most testers have a Collection) so you can resend it later with one click. You will send these requests many times today.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part D: An API tester
+Step 9: Test your API with an API tester (5 min)
+A browser address bar can only send GET requests. To send POST, PUT and DELETE, with a JSON body, 
+you need an API tester. Pick one:
+Tool How to get it
+Thunder 
+Client
+In VS Code: Extensions (Ctrl/Cmd + Shift + X), search Thunder Client, Install. A lightning 
+icon appears in the side bar.
+Postman Download the free desktop app from postman.com (or use it in the browser with the 
+desktop agent).
+Insomnia Free desktop app from insomnia.rest.
+They all look much the same: a method menu, a URL box, a Send button, and tabs for the request Body 
+and Headers. The response, with its status and body, appears below.
+1. Open your tester and start a New Request.
+2. Leave the method on GET, type http://localhost:3000/quotes/2048, and press Send.
+3. Check that you see 200 OK and the quote. Then try /quotes/1 and look for 404.
+Figure 16 — the parts of an API tester, sending GET /quotes/2048
+T I P
+Save each request (most testers have a Collection) so you can resend it later with one click. You will send 
+these requests many times today.
+13</pre></details></section>
+<section class="page" id="page-14"><div class="page-label">第 14 页 / 共 29 页</div><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>14</pre></details></section>
+<section class="page" id="page-15"><div class="page-label">第 15 页 / 共 29 页</div><h2 id="part-Part-E-CREATE-UPDATE-DELETE">Part E: CREATE, UPDATE, DELETE</h2>
+<h3 id="step-10" class="step-heading"><span class="step-label">Step 10</span>POST: create a new quote (8 min)</h3>
+<p>POST /quotes adds a quote to the collection. The new quote travels in the request body as JSON, and you read it in Express from req.body. You do not send an id: records.createQuote() makes one, just as a database would.</p>
+<ol><li>Add this route under the GET routes:</li></ol>
+<pre class="code"><code>// Send a POST request to /quotes to CREATE a new quote</code></pre>
+<pre class="code"><code>app.post(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  const quote = await records.createQuote({
+    quote: req.body.quote,
+    author: req.body.author
+  });
+  res.status(201).json(quote);
+});</code></pre>
+<p>201 Created is the success code for &quot;a new resource was made&quot;. It is good practice to send the new item back, so the client learns its id.</p>
+<ol><li>In the tester: method POST, URL http://localhost:3000/quotes, open Body, choose JSON (in Postman: raw then JSON), and type:</li></ol>
+<pre class="code"><code>{
+  &quot;quote&quot;: &quot;Make it work, make it right, make it fast.&quot;,
+  &quot;author&quot;: &quot;Kent Beck&quot;
+}</code></pre>
+<ol><li>Press Send. It fails!</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part E: CREATE, UPDATE, DELETE
+Step 10: POST: create a new quote (8 min)
+POST /quotes adds a quote to the collection. The new quote travels in the request body as JSON, and 
+you read it in Express from req.body. You do not send an id: records.createQuote() makes 
+one, just as a database would.
+1. Add this route under the GET routes:
+ 
+// Send a POST request to /quotes to CREATE a new quote
+app.post(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  const quote = await records.createQuote({
+    quote: req.body.quote,
+    author: req.body.author
+  });
+  res.status(201).json(quote);
+});
+ 
+201 Created is the success code for &quot;a new resource was made&quot;. It is good practice to send the new 
+item back, so the client learns its id.
+2. In the tester: method POST, URL http://localhost:3000/quotes, open Body, choose JSON 
+(in Postman: raw then JSON), and type:
+ 
+{
+  &quot;quote&quot;: &quot;Make it work, make it right, make it fast.&quot;,
+  &quot;author&quot;: &quot;Kent Beck&quot;
+}
+ 
+3. Press Send. It fails!
+15</pre></details></section>
+<section class="page" id="page-16"><div class="page-label">第 16 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 17<a href="Build-a-REST-API-with-Express.pdf#page=16" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the first POST fails with 500: req.body is undefined</figcaption></figure>
+<p>By default, Express does not read the body of a request. req.body is undefined, so req.body.quote throws a TypeError, and Express replies 500 with an HTML error page.</p>
+<ol><li>Fix it with the built-in middleware express.json(). Add it near the top of app.js, right after const app = express();, before any route:</li></ol>
+<pre class="code"><code>// Middleware: turn a JSON request body into the object req.body</code></pre>
+<pre class="code"><code>app.use(express.json());</code></pre>
+<ol><li>Save and Send again. You get 201 Created and the quote with its new id. Open data.json: the quote is at the end of the file. Write down its id; you need it in Steps 13 and 14.</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 17 — the first POST fails with 500: req.body is undefined
+By default, Express does not read the body of a request. req.body is undefined, so 
+req.body.quote throws a TypeError, and Express replies 500 with an HTML error page.
+4. Fix it with the built-in middleware express.json(). Add it near the top of app.js, right after 
+const app = express();, before any route:
+ 
+// Middleware: turn a JSON request body into the object req.body
+app.use(express.json());
+ 
+5. Save and Send again. You get 201 Created and the quote with its new id. Open data.json: the 
+quote is at the end of the file. Write down its id; you need it in Steps 13 and 14.
+16</pre></details></section>
+<section class="page" id="page-17"><div class="page-label">第 17 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 18<a href="Build-a-REST-API-with-Express.pdf#page=17" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>201 Created: the new quote comes back with the id the server gave it</figcaption></figure>
+<p>T H E  B O D Y  M U S T  R E A L L Y  B E  J S O N Use double quotes around keys and strings, and no comma after the last property. If the tester&#x27;s body type is Text instead of JSON, the Content-Type header is wrong and express.json() skips the body.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-10-post</p></aside>
+<h3 id="step-11" class="step-heading"><span class="step-label">Step 11</span>Validate the body: 400 Bad Request (4 min)</h3>
+<p>Send the POST again with no author:</p>
+<pre class="code"><code>{
+  &quot;quote&quot;: &quot;A quote with no author&quot;
+}</code></pre>
+<p>It is saved anyway, with no author. A good API refuses bad data and says why, with 400 Bad Request. Wrap the create in an if:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 18 — 201 Created: the new quote comes back with the id the server gave it
+T H E  B O D Y  M U S T  R E A L L Y  B E  J S O N
+Use double quotes around keys and strings, and no comma after the last property. If the tester&#x27;s body 
+type is Text instead of JSON, the Content-Type header is wrong and express.json() skips the body.
+C H E C K P O I N T
+checkpoints/step-10-post
+Step 11: Validate the body: 400 Bad Request (4 min)
+Send the POST again with no author:
+ 
+{
+  &quot;quote&quot;: &quot;A quote with no author&quot;
+}
+ 
+It is saved anyway, with no author. A good API refuses bad data and says why, with 400 Bad Request. 
+Wrap the create in an if:
+17</pre></details></section>
+<section class="page" id="page-18"><div class="page-label">第 18 页 / 共 29 页</div><pre class="code"><code>app.post(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  if (req.body.quote &amp;&amp; req.body.author) {
+    const quote = await records.createQuote({
+      quote: req.body.quote,
+      author: req.body.author
+    });
+    res.status(201).json(quote);
+  } else {
+    res.status(400).json({ message: &#x27;Quote and author required.&#x27; });
+  }
+});</code></pre>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 19<a href="Build-a-REST-API-with-Express.pdf#page=18" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a missing author now gives 400 Bad Request</figcaption></figure>
+<p>Open data.json and delete the quote with no author that you saved a minute ago (or leave it: you will delete it with your API in Step 14).</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-11-post-400</p></aside>
+<h3 id="step-12" class="step-heading"><span class="step-label">Step 12</span>try / catch: 500 Internal Server Error (4 min)</h3>
+<p>What if records.js fails, for example data.json is broken or the disk is full? The await throws an error. We catch it with try / catch and send 500 with the error&#x27;s message.</p>
+<ol><li>To see it happen, add a pretend failure as the first line inside the try:</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>app.post(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  if (req.body.quote &amp;&amp; req.body.author) {
+    const quote = await records.createQuote({
+      quote: req.body.quote,
+      author: req.body.author
+    });
+    res.status(201).json(quote);
+  } else {
+    res.status(400).json({ message: &#x27;Quote and author required.&#x27; });
+  }
+});
+ 
+Figure 19 — a missing author now gives 400 Bad Request
+Open data.json and delete the quote with no author that you saved a minute ago (or leave it: you 
+will delete it with your API in Step 14).
+C H E C K P O I N T
+checkpoints/step-11-post-400
+Step 12: try / catch: 500 Internal Server Error (4 min)
+What if records.js fails, for example data.json is broken or the disk is full? The await throws an 
+error. We catch it with try / catch and send 500 with the error&#x27;s message.
+1. To see it happen, add a pretend failure as the first line inside the try:
+18</pre></details></section>
+<section class="page" id="page-19"><div class="page-label">第 19 页 / 共 29 页</div><pre class="code"><code>app.post(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  try {
+    throw new Error(&#x27;something went wrong. Error ###&#x27;);
+    if (req.body.quote &amp;&amp; req.body.author) {
+      const quote = await records.createQuote({
+        quote: req.body.quote,
+        author: req.body.author
+      });
+      res.status(201).json(quote);
+    } else {
+      res.status(400).json({ message: &#x27;Quote and author required.&#x27; });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});</code></pre>
+<ol><li>Send a valid POST. You get 500 and { &quot;message&quot;: &quot;something went wrong. Error ###&quot; }.</li><li>Delete the throw line, save, and send again: 201 as before. E X P R E S S  5  H E L P S If an async route throws and you have no try/catch, Express 5 still catches it and sends a 500 (that is what happened in Step 10). Writing try/catch yourself lets you choose the status and the JSON the client receives.</li></ol>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-12-try-catch</p></aside>
+<h3 id="step-13" class="step-heading"><span class="step-label">Step 13</span>PUT: update a quote (5 min)</h3>
+<p>PUT /quotes/:id replaces the quote&#x27;s fields with the ones in the body. There are three outcomes: the id does not exist (404), the body is incomplete (400), or it worked. On success there is nothing new to send back, so we answer 204 No Content with res.status(204).end().</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>app.post(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  try {
+    throw new Error(&#x27;something went wrong. Error ###&#x27;);
+    if (req.body.quote &amp;&amp; req.body.author) {
+      const quote = await records.createQuote({
+        quote: req.body.quote,
+        author: req.body.author
+      });
+      res.status(201).json(quote);
+    } else {
+      res.status(400).json({ message: &#x27;Quote and author required.&#x27; });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+ 
+2. Send a valid POST. You get 500 and { &quot;message&quot;: &quot;something went wrong. Error 
+###&quot; }.
+3. Delete the throw line, save, and send again: 201 as before.
+E X P R E S S  5  H E L P S
+If an async route throws and you have no try/catch, Express 5 still catches it and sends a 500 (that is 
+what happened in Step 10). Writing try/catch yourself lets you choose the status and the JSON the 
+client receives.
+C H E C K P O I N T
+checkpoints/step-12-try-catch
+Step 13: PUT: update a quote (5 min)
+PUT /quotes/:id replaces the quote&#x27;s fields with the ones in the body. There are three outcomes: 
+the id does not exist (404), the body is incomplete (400), or it worked. On success there is nothing new 
+to send back, so we answer 204 No Content with res.status(204).end().
+19</pre></details></section>
+<section class="page" id="page-20"><div class="page-label">第 20 页 / 共 29 页</div><pre class="code"><code>// Send a PUT request to /quotes/:id to UPDATE (edit) a quote</code></pre>
+<pre class="code"><code>app.put(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  try {
+    const quote = await records.getQuote(req.params.id);
+    if (!quote) {
+      res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+    } else if (!req.body.quote || !req.body.author) {
+      res.status(400).json({ message: &#x27;Quote and author required.&#x27; });
+    } else {
+      quote.quote = req.body.quote;
+      quote.author = req.body.author;
+      await records.updateQuote(quote);
+      res.status(204).end();
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});</code></pre>
+<p>Test it with the id from Step 10 (yours will differ from 5113):</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 20<a href="Build-a-REST-API-with-Express.pdf#page=20" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>PUT returns 204 No Content: done, and nothing to send back</figcaption></figure>
+<p>Then send GET to the same URL to see the change, and try a PUT to /quotes/1 (404). O N E  R E P L Y  P E R  R E Q U E S T After res.json() or res.end(), the response is finished. Calling res.status(...) or res.json(...) again in the same request causes the error Cannot set headers after they are sent. That is why each branch above sends exactly one reply.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-13-put</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>// Send a PUT request to /quotes/:id to UPDATE (edit) a quote
+app.put(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  try {
+    const quote = await records.getQuote(req.params.id);
+    if (!quote) {
+      res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+    } else if (!req.body.quote || !req.body.author) {
+      res.status(400).json({ message: &#x27;Quote and author required.&#x27; });
+    } else {
+      quote.quote = req.body.quote;
+      quote.author = req.body.author;
+      await records.updateQuote(quote);
+      res.status(204).end();
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+ 
+Test it with the id from Step 10 (yours will differ from 5113):
+Figure 20 — PUT returns 204 No Content: done, and nothing to send back
+Then send GET to the same URL to see the change, and try a PUT to /quotes/1 (404).
+O N E  R E P L Y  P E R  R E Q U E S T
+After res.json() or res.end(), the response is finished. Calling res.status(...) or 
+res.json(...) again in the same request causes the error Cannot set headers after they are sent. That 
+is why each branch above sends exactly one reply.
+C H E C K P O I N T
+checkpoints/step-13-put
+20</pre></details></section>
+<section class="page" id="page-21"><div class="page-label">第 21 页 / 共 29 页</div><h3 id="step-14" class="step-heading"><span class="step-label">Step 14</span>DELETE: remove a quote (4 min)</h3>
+<pre class="code"><code>// Send a DELETE request to /quotes/:id to DELETE a quote</code></pre>
+<pre class="code"><code>app.delete(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  try {
+    const quote = await records.getQuote(req.params.id);
+    if (quote) {
+      await records.deleteQuote(quote);
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});</code></pre>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 21<a href="Build-a-REST-API-with-Express.pdf#page=21" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>DELETE returns 204; the same DELETE a second time returns 404</figcaption></figure>
+<p>Delete the quote you created in Step 10 (and the one with no author from Step 11, if it is still there). Check data.json: they are gone. You now have full CRUD.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-14-delete</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Step 14: DELETE: remove a quote (4 min)
+ 
+// Send a DELETE request to /quotes/:id to DELETE a quote
+app.delete(&#x27;/quotes/:id&#x27;, async (req, res) =&gt; {
+  try {
+    const quote = await records.getQuote(req.params.id);
+    if (quote) {
+      await records.deleteQuote(quote);
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+ 
+Figure 21 — DELETE returns 204; the same DELETE a second time returns 404
+Delete the quote you created in Step 10 (and the one with no author from Step 11, if it is still there). 
+Check data.json: they are gone. You now have full CRUD.
+C H E C K P O I N T
+checkpoints/step-14-delete
+21</pre></details></section>
+<section class="page" id="page-22"><div class="page-label">第 22 页 / 共 29 页</div><h2 id="part-Part-F-Extras-every-API-needs">Part F: Extras every API needs</h2>
+<h3 id="step-15" class="step-heading"><span class="step-label">Step 15</span>A random quote, and why route order matters (5 min)</h3>
+<p>The plan has GET /quotes/random, which uses records.getRandomQuote().</p>
+<ol><li>Before you write it, open http://localhost:3000/quotes/random. You get 404 Quote not found. Express matched /quotes/:id with id = &quot;random&quot;!</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 22<a href="Build-a-REST-API-with-Express.pdf#page=22" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>/quotes/random caught by the /quotes/:id route</figcaption></figure>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 23<a href="Build-a-REST-API-with-Express.pdf#page=22" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>Express tries routes from top to bottom; the fixed path must come first</figcaption></figure>
+<ol><li>Add the new route above the /quotes/:id route:</li></ol>
+<pre class="code"><code>// Send a GET request to /quotes/random to READ (view) a random quote
+// It must come BEFORE /quotes/:id, or :id would catch the word &#x27;random&#x27;</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes/random&#x27;, async (req, res) =&gt; {
+  const quote = await records.getRandomQuote();
+  res.json(quote);
+});</code></pre>
+<ol><li>Reload a few times: a different quote each time (sometimes the same one twice; it is random).</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part F: Extras every API needs
+Step 15: A random quote, and why route order matters (5 min)
+The plan has GET /quotes/random, which uses records.getRandomQuote().
+1. Before you write it, open http://localhost:3000/quotes/random. You get 404 Quote not 
+found. Express matched /quotes/:id with id = &quot;random&quot;!
+Figure 22 — /quotes/random caught by the /quotes/:id route
+Figure 23 — Express tries routes from top to bottom; the fixed path must come first
+2. Add the new route above the /quotes/:id route:
+ 
+// Send a GET request to /quotes/random to READ (view) a random quote
+// It must come BEFORE /quotes/:id, or :id would catch the word &#x27;random&#x27;
+app.get(&#x27;/quotes/random&#x27;, async (req, res) =&gt; {
+  const quote = await records.getRandomQuote();
+  res.json(quote);
+});
+ 
+3. Reload a few times: a different quote each time (sometimes the same one twice; it is random).
+22</pre></details></section>
+<section class="page" id="page-23"><div class="page-label">第 23 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 24<a href="Build-a-REST-API-with-Express.pdf#page=23" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>GET /quotes/random</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-15-random</p></aside>
+<h3 id="step-16" class="step-heading"><span class="step-label">Step 16</span>Query strings: search by author (5 min)</h3>
+<p>Query strings are how a client adds options to a request on a collection: search, sort, filter, page. Express puts them in req.query: for /quotes?author=dijkstra, req.query.author is &quot;dijkstra&quot;. (The class file S4-2 reads them the old way, with url.parse(req.url, true).query. req.query gives the same object with no extra code.) Change the /quotes route so ?author= keeps only matching quotes. Without ?author=, req.query.author is undefined and every quote is sent, as before.</p>
+<pre class="code"><code>// Send a GET request to /quotes to READ a list of quotes
+// Optional query string: /quotes?author=dijkstra</code></pre>
+<pre class="code"><code>app.get(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  const data = await records.getQuotes();
+  let quotes = data.records;
+  if (req.query.author) {
+    const search = req.query.author.toLowerCase();
+    quotes = quotes.filter(q =&gt; q.author.toLowerCase().includes(search));
+  }
+  res.json(quotes);
+});</code></pre>
+<p>Try http://localhost:3000/quotes?author=dijkstra, then ?author=KING and ? author=nobody (an empty array [], still 200: an empty search result is not an error).</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 24 — GET /quotes/random
+C H E C K P O I N T
+checkpoints/step-15-random
+Step 16: Query strings: search by author (5 min)
+Query strings are how a client adds options to a request on a collection: search, sort, filter, page. 
+Express puts them in req.query: for /quotes?author=dijkstra, req.query.author is 
+&quot;dijkstra&quot;. (The class file S4-2 reads them the old way, with url.parse(req.url, 
+true).query. req.query gives the same object with no extra code.)
+Change the /quotes route so ?author= keeps only matching quotes. Without ?author=, 
+req.query.author is undefined and every quote is sent, as before.
+ 
+// Send a GET request to /quotes to READ a list of quotes
+// Optional query string: /quotes?author=dijkstra
+app.get(&#x27;/quotes&#x27;, async (req, res) =&gt; {
+  const data = await records.getQuotes();
+  let quotes = data.records;
+  if (req.query.author) {
+    const search = req.query.author.toLowerCase();
+    quotes = quotes.filter(q =&gt; q.author.toLowerCase().includes(search));
+  }
+  res.json(quotes);
+});
+ 
+Try http://localhost:3000/quotes?author=dijkstra, then ?author=KING and ?
+author=nobody (an empty array [], still 200: an empty search result is not an error).
+23</pre></details></section>
+<section class="page" id="page-24"><div class="page-label">第 24 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 25<a href="Build-a-REST-API-with-Express.pdf#page=24" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>/quotes?author=dijkstra keeps two quotes</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-16-query-string</p></aside>
+<h3 id="step-17" class="step-heading"><span class="step-label">Step 17</span>One place for errors: the 404 and error-handling middleware (5 min)</h3>
+<p>Open http://localhost:3000/hello, a route that does not exist. Express answers with its own HTML page, which is odd for an API that otherwise speaks JSON:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 26<a href="Build-a-REST-API-with-Express.pdf#page=24" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>Express&#x27;s default 404 is an HTML page</figcaption></figure>
+<p>We add two middleware functions at the end of app.js, just above app.listen(...), so that every error, wherever it starts, comes back as JSON:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 25 — /quotes?author=dijkstra keeps two quotes
+C H E C K P O I N T
+checkpoints/step-16-query-string
+Step 17: One place for errors: the 404 and error-handling middleware (5 min)
+Open http://localhost:3000/hello, a route that does not exist. Express answers with its own 
+HTML page, which is odd for an API that otherwise speaks JSON:
+Figure 26 — Express&#x27;s default 404 is an HTML page
+We add two middleware functions at the end of app.js, just above app.listen(...), so that every 
+error, wherever it starts, comes back as JSON:
+24</pre></details></section>
+<section class="page" id="page-25"><div class="page-label">第 25 页 / 共 29 页</div><pre class="code"><code>// ------------------------------------------------ error handling
+// 1. No route above matched: make a 404 error and pass it on</code></pre>
+<pre class="code"><code>app.use((req, res, next) =&gt; {
+  const err = new Error(&#x27;Not Found&#x27;);
+  err.status = 404;
+  next(err);
+});</code></pre>
+<pre class="code"><code>// 2. The error handler (4 parameters): every next(err) ends up here</code></pre>
+<pre class="code"><code>app.use((err, req, res, next) =&gt; {
+  res.status(err.status || 500);
+  res.json({
+    error: {
+      message: err.message
+    }
+  });
+});</code></pre>
+<ul><li>Middleware runs in the order it is written. The first one is reached only if no route sent a reply, so it is a &quot;catch-all&quot; for unknown URLs.</li><li>Calling next(err) with an error skips every normal route and jumps straight to the error handler. Express recognises the error handler by its four parameters (err, req, res, next), so keep all four even if you do not use next. Now let the routes use the same handler. In each route that has a catch, add next to the parameters and replace the 500 reply with next(err). For example, DELETE becomes:</li></ul>
+<pre class="code"><code>// Send a DELETE request to /quotes/:id to DELETE a quote</code></pre>
+<pre class="code"><code>app.delete(&#x27;/quotes/:id&#x27;, async (req, res, next) =&gt; {
+  try {
+    const quote = await records.getQuote(req.params.id);
+    if (quote) {
+      await records.deleteQuote(quote);
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+    }
+  } catch (err) {
+    next(err);
+  }
+});</code></pre>
+<pre class="code"><code>Do the same for POST and PUT, and wrap the three GET routes in try { ... } catch (err)
+{ next(err); } too. Compare with checkpoints/step-17-error-handling/app.js (the
+same as final/app.js).</code></pre><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>// ------------------------------------------------ error handling
+// 1. No route above matched: make a 404 error and pass it on
+app.use((req, res, next) =&gt; {
+  const err = new Error(&#x27;Not Found&#x27;);
+  err.status = 404;
+  next(err);
+});
+ 
+// 2. The error handler (4 parameters): every next(err) ends up here
+app.use((err, req, res, next) =&gt; {
+  res.status(err.status || 500);
+  res.json({
+    error: {
+      message: err.message
+    }
+  });
+});
+ 
+• Middleware runs in the order it is written. The first one is reached only if no route sent a reply, so 
+it is a &quot;catch-all&quot; for unknown URLs.
+• Calling next(err) with an error skips every normal route and jumps straight to the error handler. 
+Express recognises the error handler by its four parameters (err, req, res, next), so keep 
+all four even if you do not use next.
+Now let the routes use the same handler. In each route that has a catch, add next to the parameters 
+and replace the 500 reply with next(err). For example, DELETE becomes:
+ 
+// Send a DELETE request to /quotes/:id to DELETE a quote
+app.delete(&#x27;/quotes/:id&#x27;, async (req, res, next) =&gt; {
+  try {
+    const quote = await records.getQuote(req.params.id);
+    if (quote) {
+      await records.deleteQuote(quote);
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: &#x27;Quote not found.&#x27; });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+ 
+Do the same for POST and PUT, and wrap the three GET routes in try { ... } catch (err) 
+{ next(err); } too. Compare with checkpoints/step-17-error-handling/app.js (the 
+same as final/app.js).
+25</pre></details></section>
+<section class="page" id="page-26"><div class="page-label">第 26 页 / 共 29 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 27<a href="Build-a-REST-API-with-Express.pdf#page=26" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the order of app.js: body parser, routes, 404 maker, error handler</figcaption></figure>
+<p>Open http://localhost:3000/hello once more:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 28<a href="Build-a-REST-API-with-Express.pdf#page=26" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>unknown URLs now get a JSON 404 from the error handler</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-17-error-handling</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 27 — the order of app.js: body parser, routes, 404 maker, error handler
+Open http://localhost:3000/hello once more:
+Figure 28 — unknown URLs now get a JSON 404 from the error handler
+C H E C K P O I N T
+checkpoints/step-17-error-handling
+26</pre></details></section>
+<section class="page" id="page-27"><div class="page-label">第 27 页 / 共 29 页</div><p>Wrap-up Self-check: send every request once Run through this list in your API tester. Every line should give the status shown. # Request Body Expect 1 GET /quotes 200, array of quotes 2 GET /quotes? author=king 200, one quote 3 GET /quotes/random 200, one quote 4 GET /quotes/2048 200, the Dijkstra quote 5 GET /quotes/1 404, Quote not found. 6 POST /quotes { &quot;quote&quot;: &quot;...&quot;, &quot;author&quot;: &quot;...&quot; } 201, new quote with id 7 POST /quotes { &quot;quote&quot;: &quot;...&quot; } 400 8 PUT /quotes/&lt;new id&gt; { &quot;quote&quot;: &quot;...&quot;, &quot;author&quot;: &quot;...&quot; } 204 9 PUT /quotes/1 { &quot;quote&quot;: &quot;...&quot;, &quot;author&quot;: &quot;...&quot; } 404 10 DELETE /quotes/&lt;new id&gt; 204, and again: 404 11 GET /hello 404, { &quot;error&quot;: { &quot;message&quot;: &quot;Not Found&quot; } }</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Wrap-up
+Self-check: send every request once
+Run through this list in your API tester. Every line should give the status shown.
+# Request Body Expect
+1 GET /quotes 200, array of quotes
+2 GET /quotes?
+author=king
+200, one quote
+3 GET 
+/quotes/random
+200, one quote
+4 GET 
+/quotes/2048
+200, the Dijkstra quote
+5 GET /quotes/1 404, Quote not found.
+6 POST /quotes { &quot;quote&quot;: &quot;...&quot;, 
+&quot;author&quot;: &quot;...&quot; }
+201, new quote with id
+7 POST /quotes { &quot;quote&quot;: &quot;...&quot; } 400
+8 PUT 
+/quotes/&lt;new 
+id&gt;
+{ &quot;quote&quot;: &quot;...&quot;, 
+&quot;author&quot;: &quot;...&quot; }
+204
+9 PUT /quotes/1 { &quot;quote&quot;: &quot;...&quot;, 
+&quot;author&quot;: &quot;...&quot; }
+404
+10 DELETE 
+/quotes/&lt;new 
+id&gt;
+204, and again: 404
+11 GET /hello 404, { &quot;error&quot;: 
+{ &quot;message&quot;: &quot;Not 
+Found&quot; } }
+27</pre></details></section>
+<section class="page" id="page-28"><div class="page-label">第 28 页 / 共 29 页</div><p>What you learned Idea In Express Send JSON res.json(object) (sets Content-Type: application/json) Set the status code res.status(201).json(...), res.status(204).end() Route parameter app.get(&#x27;/quotes/:id&#x27;, ...) then req.params.id (a string) Query string /quotes?author=king then req.query.author Request body app.use(express.json()), then req.body Wait for the data async (req, res) =&gt; { const x = await records.getQuote(id); } Catch failures try { ... } catch (err) { next(err); } Route order fixed paths (/quotes/random) before parameters (/quotes/:id) One JSON error format 404 middleware + 4-parameter error handler, last before listen L O O K I N G  A H E A D :  F R O M  D A T A . J S O N  T O  M O N G O D B Our quotes are JSON objects in a list, and records.js hides how they are stored. MongoDB (see Notes on NoSQL Databases) stores exactly this kind of JSON-like document, grouped in a collection (here, quotes), and gives each one an id itself. Next session we replace records.js with MongoDB and Mongoose. Your routes, status codes and error handling stay the same. I F  Y O U  F I N I S H  E A R L Y Add GET /authors that returns a sorted array of the different authors, each one once (hint: new Set(...), then [...set].sort()). Where must it go? Does the order matter here, as it did in Step 15? Then add ?limit=3 to GET /quotes so it returns only the first three quotes (quotes.slice(0, Number(req.query.limit))).</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>What you learned
+Idea In Express
+Send JSON res.json(object) (sets Content-Type: application/json)
+Set the status code res.status(201).json(...), res.status(204).end()
+Route parameter app.get(&#x27;/quotes/:id&#x27;, ...) then req.params.id (a string)
+Query string /quotes?author=king then req.query.author
+Request body app.use(express.json()), then req.body
+Wait for the data async (req, res) =&gt; { const x = await 
+records.getQuote(id); }
+Catch failures try { ... } catch (err) { next(err); }
+Route order fixed paths (/quotes/random) before parameters (/quotes/:id)
+One JSON error format 404 middleware + 4-parameter error handler, last before listen
+L O O K I N G  A H E A D :  F R O M  D A T A . J S O N  T O  M O N G O D B
+Our quotes are JSON objects in a list, and records.js hides how they are stored. MongoDB (see Notes 
+on NoSQL Databases) stores exactly this kind of JSON-like document, grouped in a collection (here, 
+quotes), and gives each one an id itself. Next session we replace records.js with MongoDB and 
+Mongoose. Your routes, status codes and error handling stay the same.
+I F  Y O U  F I N I S H  E A R L Y
+Add GET /authors that returns a sorted array of the different authors, each one once (hint: new 
+Set(...), then [...set].sort()). Where must it go? Does the order matter here, as it did in Step 
+15? Then add ?limit=3 to GET /quotes so it returns only the first three quotes (quotes.slice(0, 
+Number(req.query.limit))).
+28</pre></details></section>
+<section class="page" id="page-29"><div class="page-label">第 29 页 / 共 29 页</div><p>Troubleshooting You see Usually because Fix Cannot GET /quotes (HTML) the route is missing, misspelled, or the file is not saved check the path, save; with --watch the server restarts EADDRINUSE: address already in use :::3000 another server is still running press Ctrl + C in the other terminal, or close it {} instead of data missing await await records.... inside an async function req.body is undefined (500) no express.json(), or body type is not JSON add app.use(express.json()) above the routes; choose JSON in the tester 404 for /quotes/random /quotes/:id is above it move /quotes/random higher Cannot set headers after they are sent two replies in one request each path through the route sends exactly one res.json()/res.end() ENOENT ... data.json data.json was renamed or moved keep it next to records.js Unexpected token in JSON (400) bad JSON in the tester body double quotes, no trailing comma</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Troubleshooting
+You see Usually because Fix
+Cannot GET 
+/quotes (HTML)
+the route is missing, misspelled, 
+or the file is not saved
+check the path, save; with --watch the 
+server restarts
+EADDRINUSE: 
+address already 
+in use :::3000
+another server is still running press Ctrl + C in the other terminal, or 
+close it
+{} instead of data missing await await records.... inside an async 
+function
+req.body is 
+undefined (500)
+no express.json(), or body 
+type is not JSON
+add app.use(express.json()) above 
+the routes; choose JSON in the tester
+404 for 
+/quotes/random
+/quotes/:id is above it move /quotes/random higher
+Cannot set 
+headers after 
+they are sent
+two replies in one request each path through the route sends 
+exactly one res.json()/res.end()
+ENOENT ... 
+data.json
+data.json was renamed or 
+moved
+keep it next to records.js
+Unexpected token in 
+JSON (400)
+bad JSON in the tester body double quotes, no trailing comma
+29</pre></details></section>
+  </main>
+
+  <footer>本页由原始 PDF 逐页提取生成：正文按标题、步骤、代码与提示重新排版；每页末尾保留完整原始文本以便核对。原 PDF 中的配图以占位框标注，并提供跳转到对应 PDF 页码的链接。</footer>
+</div>
+</body>
+</html>

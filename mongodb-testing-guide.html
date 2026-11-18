@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用 MongoDB 测试 book-store-api-checkpoints · 一步一步实操指南</title>
+<style>
+  :root { --accent: #a78bfa; --accent-line: #4c3d78; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0b0f14; color: #dce6f2; line-height: 1.75;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 24px 80px; }
+  header.hero { border-bottom: 1px solid #263244; padding-bottom: 24px; }
+  .back { font-size: 13px; color: #8ea0b8; }
+  .kicker { color: var(--accent); font-size: 12px; letter-spacing: 2px; margin-top: 14px; }
+  h1 { font-size: 30px; margin: 6px 0 6px; }
+  .subtitle { color: #8ea0b8; margin: 0; font-size: 15px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .jump { background:#161f2b; color:#dce6f2; border:1px solid #263244; border-radius:8px; padding:7px 13px; font-size:13px; }
+  .jump:hover { border-color: var(--accent); color: var(--accent); }
+  .toc { margin: 22px 0 30px; padding: 16px 20px; background: #121821; border: 1px solid #263244; border-radius: 12px; }
+  .toc h2 { font-size: 15px; margin: 0 0 10px; color: #8ea0b8; }
+  .toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+  .toc li { break-inside: avoid; font-size: 13px; margin: 3px 0; }
+  .card { background: #121821; border: 1px solid #263244; border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; scroll-margin-top: 20px; }
+  .card h2 { font-size: 20px; margin: 0 0 12px; color: var(--accent); }
+  .card h2 .num { font-size: 12px; color: #8ea0b8; border: 1px solid #263244; border-radius: 999px; padding: 1px 9px; margin-right: 10px; }
+  p { font-size: 14.5px; margin: 10px 0; }
+  ul, ol { padding-left: 24px; font-size: 14.5px; }
+  li { margin: 5px 0; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  p code, li code { background: #080c11; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; color: #c4b5fd; }
+  pre.code {
+    background: #080c11; border: 1px solid #263244; border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .note { border-left: 3px solid; border-radius: 8px; padding: 12px 16px; margin: 16px 0; background: #0f1620; }
+  .note strong { font-size: 12px; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+  .note ul { margin: 0; padding-left: 20px; font-size: 13.5px; }
+  .note.why { border-color: #38bdf8; } .note.why strong { color: #38bdf8; }
+  .note.tip { border-color: #4ade80; } .note.tip strong { color: #4ade80; }
+  .note.warn { border-color: #fbbf24; } .note.warn strong { color: #fbbf24; }
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 620px; }
+  th, td { border: 1px solid #263244; padding: 9px 11px; text-align: left; vertical-align: top; }
+  th { background: #161f2b; color: #8ea0b8; }
+  .check { display: block; font-size: 14px; padding: 5px 0; }
+  .check input { accent-color: var(--accent); margin-right: 8px; }
+  footer { color: #8ea0b8; font-size: 13px; border-top: 1px solid #263244; margin-top: 30px; padding-top: 16px; }
+  @media (max-width: 700px) { .toc ol { columns: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <a class="back" href="index.html">← 返回教材首页</a>
+    <div class="kicker">CSIS 3380 · MODULE 8 · BOOK-STORE-API-CHECKPOINTS</div>
+    <h1>用 MongoDB 测试 book-store-api-checkpoints</h1>
+    <p class="subtitle">从注册 MongoDB Atlas、配置连接串，到用 mongosh 和 API 工具逐项验证 CRUD。每一步都写清楚「做什么、看到什么、为什么」。</p>
+    <div class="toolbar">
+      <a class="jump" href="book-store.html">查看 book-store-api 代码详解 →</a>
+      <a class="jump" href="mongodb-mongoose-tutorial.html">查看 PDF 教材 HTML 版 →</a>
+      <a class="jump" href="#checklist">跳到测试清单</a>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h2>目录（17 个步骤）</h2>
+    <ol><li><a href="#flow">先看懂整条链路</a></li><li><a href="#folder">准备：在 book-store-api-checkpoints 里选对文件夹</a></li><li><a href="#atlas-signup">第 1 步：注册 MongoDB Atlas 并创建免费集群</a></li><li><a href="#atlas-user">第 2 步：创建应用专用的数据库用户</a></li><li><a href="#atlas-ip">第 3 步：允许你的电脑访问集群</a></li><li><a href="#atlas-uri">第 4 步：复制连接字符串，并改成项目需要的格式</a></li><li><a href="#env">第 5 步：把连接串放进 .env</a></li><li><a href="#start">第 6 步：安装依赖并启动 API 服务</a></li><li><a href="#seed">第 7 步：写入 6 本测试图书</a></li><li><a href="#verify-db">第 8 步：在 MongoDB 端确认数据真的进去了</a></li><li><a href="#api-prep">第 9 步：准备 API 测试工具</a></li><li><a href="#crud">第 10 步：按顺序测试 6 个接口</a></li><li><a href="#errors">第 11 步：故意制造错误，验证错误处理</a></li><li><a href="#verify-write">第 12 步：回到 mongosh，确认 API 的写操作真的落库</a></li><li><a href="#troubleshoot">第 13 步：遇到问题时的排查清单</a></li><li><a href="#checkpoint-map">进阶：按 checkpoint 逐个验证（step-05 → final）</a></li><li><a href="#checklist">第 14 步：完整测试清单（可勾选）</a></li></ol>
+  </nav>
+
+  <main>
+<section class="card" id="flow">
+  <h2><span class="num">01</span>先看懂整条链路</h2>
+  <p>这个项目的每一次请求，都会沿着同一条路径走。先记住这张图，后面每一步测试其实都是在验证链路中的一环。</p>
+<pre class="code"><code>浏览器 / curl / Thunder Client
+        ↓  HTTP 请求
+Express 路由 (routes/books.js)
+        ↓  Mongoose Model ( Book )
+MongoDB 集合 ( bookstore.books )
+        ↓  文档 _id / createdAt / updatedAt
+原路返回 JSON 响应</code></pre>
+<aside class="note why"><strong>为什么这样设计</strong><ul><li>Mongoose 位于路由和 MongoDB 之间：路由只写 Book.find() / Book.create()，不直接写数据库命令。</li><li>所以测试要分两层：一层看 API 返回的 JSON 和状态码，另一层去 MongoDB 里看文档是否真的变了。</li><li>两层都对，才算真正「连接成功」。</li></ul></aside>
+</section>
+<section class="card" id="folder">
+  <h2><span class="num">02</span>准备：在 book-store-api-checkpoints 里选对文件夹</h2>
+  <p>这个文件夹里每一个 step-XX-... 都是一个能独立运行的小项目，不是只给你看的片段。测试时先决定要跑哪一个。</p>
+<p>推荐先用 final（完整版）跑通整条链路，再回到各个 checkpoint 逐个验证新增功能。</p>
+<pre class="code"><code>book-store-api-checkpoints/
+├── step-05-connect/          只做连接 + 欢迎路由
+├── step-06-schema-model/     新增 Schema / Model
+├── step-07-seed/             新增 seed.js，可灌 6 本书
+├── step-08-read/             新增 GET 列表 / 单本
+├── step-09-create/           新增 POST
+├── step-10-update/           新增 PUT
+├── step-11-delete/           新增 DELETE
+├── step-12-errors-and-filter/ 新增筛选 + 错误处理
+├── step-13-modules/          拆成 routes/ 与 models/，加 CORS
+└── final/                    最终完整版</code></pre>
+<p>要把同一个 MongoDB 连接串给某个 checkpoint 用，就把 final 里配好的 .env 复制过去：</p>
+<pre class="code"><code>cd &quot;…/book-store-api-checkpoints/final&quot;
+cp .env.example .env      # 先在这里填好你自己的连接串
+
+# 例：单独测试 step-08-read
+cp final/.env step-08-read/.env
+cd step-08-read
+npm install
+npm start</code></pre>
+<aside class="note why"><strong>为什么要按文件夹逐个测</strong><ul><li>每个 checkpoint 是当时功能的快照：step-05 还没有 books 接口，step-07 有数据但还没有读接口。</li><li>如果直接拿 final 去测 step-05 的功能，你会误以为代码没生效。</li><li>逐个测能清楚看到「这一步到底新增了哪个 API 行为」。</li></ul></aside>
+<aside class="note tip"><strong>切换 checkpoint 的标准动作</strong><ul><li>1) 进入目标 step 文件夹；2) 复制 .env；3) npm install；4) npm start；5) 测完按 Ctrl + C 再进下一个。</li><li>所有 checkpoint 共用同一个 MongoDB 数据库 bookstore，测试数据会互相看到，这是正常的。</li></ul></aside>
+</section>
+<section class="card" id="atlas-signup">
+  <h2><span class="num">03</span>第 1 步：注册 MongoDB Atlas 并创建免费集群</h2>
+  <p>MongoDB Atlas 是 MongoDB 官方的云服务，免费层级（M0）足够本课程使用。</p>
+<ol><li>打开 https://www.mongodb.com/atlas ，点击 Sign Up；也可以用 Google 账号快捷注册，完成后去邮箱验证。</li><li>登录后创建一个 Project（项目），名字可以填 CSIS 3380 或 Module 8。</li><li>在项目里点击 Create a Cluster（或 Build a Database）。</li><li>选择 Free 层级 M0；云服务商保持默认，Region 选离你近的位置（例如临近城市）。</li><li>Cluster Name 保持 Cluster0 或自己起一个，点 Create。集群创建需要 1–2 分钟，状态变绿后才能用。</li></ol>
+<aside class="note tip"><strong>免费集群的小特点</strong><ul><li>一段时间没人访问会自动休眠，第一次连接可能多花几秒，这是正常的。</li><li>同一个集群以后部署到云上也能继续用，不必重做。</li></ul></aside>
+</section>
+<section class="card" id="atlas-user">
+  <h2><span class="num">04</span>第 2 步：创建应用专用的数据库用户</h2>
+  <p>这个账号是给 Node.js 程序连接数据库用的，不是你登录 Atlas 网页的账号。</p>
+<ol><li>左侧菜单进入 Database Access，点击 Add New Database User。</li><li>Authentication 选择 Password。</li><li>Username 填 bookuser（或你自己记得住的名字）。</li><li>Password 自己设置一个强密码。强烈建议只用字母和数字，避免 @ : / # ? &amp; 等符号，因为它们会出现在连接字符串里，需要额外转义。</li><li>Database User Privileges 选择 Read and write to any database。</li><li>点 Add User，并把用户名、密码记在安全的地方。</li></ol>
+<pre class="code"><code>用户名示例：bookuser
+密码示例：  Bookstore2026   （请改成你自己的）</code></pre>
+<aside class="note warn"><strong>常见坑</strong><ul><li>密码里带 @ 或 : 会导致连接串解析错误，出现 Authentication failed。</li><li>如果已经用了特殊字符，需要对它做 URL 编码，例如 @ 写成 %40，: 写成 %3A。</li></ul></aside>
+</section>
+<section class="card" id="atlas-ip">
+  <h2><span class="num">05</span>第 3 步：允许你的电脑访问集群</h2>
+  <p>Atlas 默认拒绝所有未知 IP 的连接，所以必须把你的公网 IP 加进白名单。</p>
+<ol><li>左侧菜单进入 Network Access。</li><li>点击 Add IP Address。</li><li>推荐选择 Add Current IP Address，然后确认。</li><li>如果在教室或咖啡厅换网络，IP 会变；课程环境下也可以临时选 Allow Access from Anywhere，即 0.0.0.0/0。</li></ol>
+<aside class="note warn"><strong>安全提醒</strong><ul><li>0.0.0.0/0 表示任何 IP 都能尝试连接，只应在练习环境使用，并且必须配合强密码。</li><li>提交作业或长期使用时，请改回自己的固定 IP。</li><li>如果漏掉这一步，启动服务器时会看到 MongooseServerSelectionError: Could not connect to any servers。</li></ul></aside>
+</section>
+<section class="card" id="atlas-uri">
+  <h2><span class="num">06</span>第 4 步：复制连接字符串，并改成项目需要的格式</h2>
+  <p>在集群页面点击 Connect → Drivers → Node.js，Atlas 会给出一段连接字符串。</p>
+<p>把它整理成下面这种形式，注意数据库名 bookstore 必须写出来：</p>
+<pre class="code"><code>mongodb+srv://bookuser:Bookstore2026@cluster0.xxxxx.mongodb.net/bookstore?retryWrites=true&amp;w=majority</code></pre>
+<div class="table-wrap"><table><thead><tr><th>片段</th><th>含义</th><th>要检查什么</th></tr></thead><tbody><tr><td>mongodb+srv://</td><td>使用 DNS SRV 发现集群节点</td><td>Atlas 集群通常都是这个前缀</td></tr><tr><td>bookuser:Bookstore2026</td><td>数据库用户名和密码</td><td>替换成你在第 2 步设置的值</td></tr><tr><td>cluster0.xxxxx.mongodb.net</td><td>集群地址</td><td>必须和你 Atlas 页面显示的一致</td></tr><tr><td>/bookstore</td><td>数据库名</td><td>不要漏掉！漏掉会连到别的库，API 看起来是空的</td></tr><tr><td>?retryWrites=true&amp;w=majority</td><td>写入重试与确认级别</td><td>保持默认即可</td></tr></tbody></table></div>
+<aside class="note warn"><strong>密码就是机密</strong><ul><li>连接串里包含密码，要当密码对待：不要写进源码，不要发到聊天群，不要提交到 GitHub。</li><li>它只应该出现在本地的 .env 文件里。</li></ul></aside>
+</section>
+<section class="card" id="env">
+  <h2><span class="num">07</span>第 5 步：把连接串放进 .env</h2>
+  <p>推荐进入完整版文件夹操作；如果你用的是自己复制出来的 book-store-api 文件夹，步骤完全一样。</p>
+<pre class="code"><code>cd &quot;…/Module 8 Serving MongoDB using REST API/book-store-api-checkpoints/final&quot;
+cp .env.example .env</code></pre>
+<p>用 VS Code 打开刚生成的 .env，改成下面这样（不要加引号，不要保留尖括号）：</p>
+<pre class="code"><code>MONGODB_URI=mongodb+srv://bookuser:Bookstore2026@cluster0.xxxxx.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+PORT=3000</code></pre>
+<ul><li>把 Bookstore2026 换成你自己的密码。</li><li>把 cluster0.xxxxx 换成你的真实集群地址。</li><li>确认 /bookstore 这一段存在。</li><li>不要提交 .env。项目里的 .gitignore 已经包含 .env 这一行。</li></ul>
+<aside class="note why"><strong>为什么用 .env</strong><ul><li>server.js 第一行就是 require(&#x27;dotenv&#x27;).config()，它会把 .env 里的值放进 process.env。</li><li>代码里只写 process.env.MONGODB_URI，所以换数据库时不用改代码。</li><li>如果连接串写死在代码里，一 push 到 GitHub 就会泄露密码。</li></ul></aside>
+</section>
+<section class="card" id="start">
+  <h2><span class="num">08</span>第 6 步：安装依赖并启动 API 服务</h2>
+  <p>在这个文件夹里打开终端，运行：</p>
+<pre class="code"><code>npm install
+npm start</code></pre>
+<p>看到下面两行就说明 Express 已经连上 MongoDB，并开始监听端口：</p>
+<pre class="code"><code>Connected to MongoDB
+Book Store API listening on http://localhost:3000</code></pre>
+<p>再打开浏览器访问 http://localhost:3000/ ，应该看到：</p>
+<pre class="code"><code>{&quot;message&quot;:&quot;Welcome to the Book Store API&quot;}</code></pre>
+<aside class="note why"><strong>为什么要先连接再监听</strong><ul><li>server.js 里的 start() 先 await mongoose.connect()，成功后才调用 app.listen()。</li><li>如果数据库连不上，服务器会打印错误并 process.exit(1)，不会假装自己正常工作。</li><li>所以看到「Connected to MongoDB」是后续所有测试的前提。</li></ul></aside>
+<aside class="note warn"><strong>如果启动失败</strong><ul><li>打印 Could not connect to MongoDB: ... 并退出：检查 .env 的路径、变量名是否拼写正确。</li><li>Authentication failed：用户名或密码错了，或者密码含特殊字符。</li><li>Server selection timed out：检查第 3 步的 IP 白名单和网络连接。</li></ul></aside>
+</section>
+<section class="card" id="seed">
+  <h2><span class="num">09</span>第 7 步：写入 6 本测试图书</h2>
+  <p>保持第 6 步的服务器终端不要关。再打开第二个终端，进入同一个文件夹，运行：</p>
+<pre class="code"><code>npm run seed</code></pre>
+<p>成功时输出：</p>
+<pre class="code"><code>Added 6 books</code></pre>
+<ul><li>seed.js 会先执行 Book.deleteMany({}) 清空 books 集合，再插入 6 本示例书。</li><li>所以每次运行 seed 都是「重置数据」，之前手动新增/修改的图书会消失。</li><li>脚本最后调用 mongoose.disconnect()，否则 Node 进程不会自己退出。</li></ul>
+<aside class="note tip"><strong>为什么一定要 seed</strong><ul><li>空数据库很难测试：你分不清是 API 没返回，还是数据库里本来就没数据。</li><li>seed 给你一组固定、可重复的数据，后面的 GET / PUT / DELETE 都能对照预期结果。</li></ul></aside>
+</section>
+<section class="card" id="verify-db">
+  <h2><span class="num">10</span>第 8 步：在 MongoDB 端确认数据真的进去了</h2>
+  <p>做两种核对方式，任选其一；推荐两种都试一遍。</p>
+<p>方式 A：Atlas 网页。进入 Browse Collections → bookstore → books，应该看到 6 个文档，每个都有 _id、title、author、pages、fiction、createdAt、updatedAt。</p>
+<p>方式 B：mongosh 命令行。先安装 MongoDB Shell（Atlas 集群页面 Connect → Shell 也会给出命令），然后执行：</p>
+<pre class="code"><code>mongosh &quot;mongodb+srv://bookuser:Bookstore2026@cluster0.xxxxx.mongodb.net/bookstore&quot;
+
+use bookstore
+db.books.find().pretty()
+db.books.countDocuments()
+db.books.find({ fiction: true }, { title: 1, _id: 0 })</code></pre>
+<p>一个文档长这样：</p>
+<pre class="code"><code>{
+  _id: ObjectId(&#x27;66f1a2b3c4d5e6f7890abcde&#x27;),
+  title: &#x27;Clean Code&#x27;,
+  author: &#x27;Robert C. Martin&#x27;,
+  pages: 464,
+  fiction: false,
+  createdAt: ISODate(&#x27;2026-11-18T...&#x27;),
+  updatedAt: ISODate(&#x27;2026-11-18T...&#x27;),
+  __v: 0
+}</code></pre>
+<ul><li>countDocuments() 应该返回 6。</li><li>find({ fiction: true }, { title: 1, _id: 0 }) 应该只列出 3 本小说。</li><li>集合名是 books：Mongoose 会把模型名 Book 自动变成小写复数集合名。</li></ul>
+<aside class="note why"><strong>为什么要看 MongoDB 原生命令</strong><ul><li>API 返回 200 只能说明 Express 给出了响应；mongosh 看到文档才能证明 Mongoose 真的写进了数据库。</li><li>以后遇到「API 成功但数据没变」的问题，这一招能快速定位是路由问题还是连接问题。</li></ul></aside>
+</section>
+<section class="card" id="api-prep">
+  <h2><span class="num">11</span>第 9 步：准备 API 测试工具</h2>
+  <p>你有两种选择，效果一样：</p>
+<ul><li>curl：命令行工具，macOS / Linux 自带；Windows PowerShell 里用 curl.exe。加上 -i 参数可以看到状态码和响应头。</li><li>Thunder Client / Postman：图形界面。VS Code 扩展市场搜 Thunder Client 安装，新建请求，填 Method、URL，Body 选 JSON，点 Send。</li></ul>
+<p>所有请求都基于同一个地址：</p>
+<pre class="code"><code>http://localhost:3000</code></pre>
+<ol><li>确认服务器终端仍在运行，并显示 Connected to MongoDB。</li><li>先做一次 GET /api/books，从返回结果里复制一个 _id，后面 PUT / DELETE 会用到。</li><li>建议按顺序做：读取 → 筛选 → 创建 → 更新 → 删除；每做完一步都回到 mongosh 看一眼数据库。</li></ol>
+</section>
+<section class="card" id="crud">
+  <h2><span class="num">12</span>第 10 步：按顺序测试 6 个接口</h2>
+  <p>下面每一条都可以直接复制到终端执行。把 &lt;ID&gt; 换成你上一步复制的真实 _id。</p>
+<p>① 读取全部图书（GET）</p>
+<pre class="code"><code>curl -i http://localhost:3000/api/books</code></pre>
+<ul><li>预期状态：200 OK。</li><li>预期结果：6 个图书对象的数组，并按 title 升序排列（代码里是 .sort({ title: 1 })）。</li><li>响应头里有 Content-Type: application/json。</li></ul>
+<p>② 按小说类型筛选（GET + 查询字符串）</p>
+<pre class="code"><code>curl -i &quot;http://localhost:3000/api/books?fiction=true&quot;</code></pre>
+<ul><li>预期状态：200 OK，只返回 3 本 fiction 为 true 的书。</li><li> ?fiction=false 则返回另外 3 本。</li></ul>
+<p>③ 读取单本图书（GET + 路径参数）</p>
+<pre class="code"><code>curl -i http://localhost:3000/api/books/&lt;ID&gt;</code></pre>
+<ul><li>预期状态：200 OK，返回那一个对象。</li></ul>
+<p>④ 创建一本新书（POST）</p>
+<pre class="code"><code>curl -i -X POST http://localhost:3000/api/books \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;title&quot;:&quot;The Pragmatic Programmer 2nd&quot;,&quot;author&quot;:&quot;David Thomas&quot;,&quot;pages&quot;:416,&quot;fiction&quot;:false}&#x27;</code></pre>
+<ul><li>预期状态：201 Created。</li><li>响应里会有新生成的 _id 和时间戳。把这个新 _id 记下来，下一步用它。</li><li>如果没有加 -H &quot;Content-Type: application/json&quot;，Express 读不到 req.body，会返回校验错误。</li></ul>
+<p>⑤ 更新这本书（PUT）</p>
+<pre class="code"><code>curl -i -X PUT http://localhost:3000/api/books/&lt;NEW_ID&gt; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;title&quot;:&quot;The Pragmatic Programmer 2nd&quot;,&quot;author&quot;:&quot;David Thomas&quot;,&quot;pages&quot;:420,&quot;fiction&quot;:false}&#x27;</code></pre>
+<ul><li>预期状态：200 OK，返回更新后的对象，pages 变成 420。</li><li>代码用了 returnDocument: &#x27;after&#x27;，所以拿到的是更新后的版本；runValidators: true 让 Schema 规则在更新时依然生效。</li></ul>
+<p>⑥ 删除这本书（DELETE）</p>
+<pre class="code"><code>curl -i -X DELETE http://localhost:3000/api/books/&lt;NEW_ID&gt;</code></pre>
+<ul><li>预期状态：204 No Content，没有响应体，这是正常的。</li><li>再执行 GET /api/books，应该又回到 6 本书。</li></ul>
+<aside class="note why"><strong>为什么要看状态码而不只看内容</strong><ul><li>201 表示资源被创建，204 表示成功但没有内容可返回，404 表示找不到资源。</li><li>状态码让前端不用解析 JSON 就能判断请求结果，是 REST API 的通用语言。</li></ul></aside>
+</section>
+<section class="card" id="errors">
+  <h2><span class="num">13</span>第 11 步：故意制造错误，验证错误处理</h2>
+  <p>一个可靠的 API 不仅要能成功，还要能「体面地失败」。下面每组测试都故意写错：</p>
+<div class="table-wrap"><table><thead><tr><th>测试请求</th><th>预期状态</th><th>你会看到的错误</th></tr></thead><tbody><tr><td>GET /api/books/123</td><td>400</td><td>That is not a valid book id.（_id 不是合法的 ObjectId，CastError）</td></tr><tr><td>GET /api/books/000000000000000000000000</td><td>404</td><td>Book not found.（格式合法但不存在）</td></tr><tr><td>POST /api/books  body: {&quot;title&quot;:&quot;No author&quot;,&quot;pages&quot;:100}</td><td>400</td><td>ValidationError: Book validation failed: author: Path `author` is required.</td></tr><tr><td>POST /api/books  body: {&quot;title&quot;:&quot;Bad&quot;,&quot;author&quot;:&quot;X&quot;,&quot;pages&quot;:0}</td><td>400</td><td>ValidationError: pages must be at least 1</td></tr><tr><td>GET /not-a-route</td><td>404</td><td>{&quot;error&quot;:{&quot;message&quot;:&quot;Not Found&quot;}}</td></tr></tbody></table></div>
+<p>示例：</p>
+<pre class="code"><code>curl -i http://localhost:3000/api/books/123
+curl -i -X POST http://localhost:3000/api/books \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;title&quot;:&quot;No author&quot;,&quot;pages&quot;:100}&#x27;</code></pre>
+<aside class="note why"><strong>为什么 CastError 变 400，而不是 500</strong><ul><li>非法 _id 和缺字段都是客户端输入问题，属于 400 Bad Request；服务器本身没坏。</li><li>server.js 末尾的四参数错误处理中间件统一捕获 next(err)，并把 CastError / ValidationError 转成 400，其他错误默认 500。</li><li>这样前端收到的错误格式永远一致：{ error: { message } }。</li></ul></aside>
+</section>
+<section class="card" id="verify-write">
+  <h2><span class="num">14</span>第 12 步：回到 mongosh，确认 API 的写操作真的落库</h2>
+  <p>在第 10 步做 POST / PUT / DELETE 的间隙，切回 mongosh 执行：</p>
+<pre class="code"><code>use bookstore
+db.books.find({ title: &#x27;The Pragmatic Programmer 2nd&#x27; }).pretty()
+db.books.countDocuments()</code></pre>
+<ul><li>POST 之后：能查到这本新书，countDocuments() 变成 7。</li><li>PUT 之后：同一本书的 pages 变成 420，updatedAt 变新。</li><li>DELETE 之后：再查不到它，countDocuments() 回到 6。</li></ul>
+<aside class="note why"><strong>这才叫「测试通过」</strong><ul><li>API 返回 201/200/204 是一层证据；数据库里的数据同步变化是第二层证据。</li><li>两层都对，才能确认 Express → Mongoose → MongoDB 这条链路完全打通。</li></ul></aside>
+</section>
+<section class="card" id="troubleshoot">
+  <h2><span class="num">15</span>第 13 步：遇到问题时的排查清单</h2>
+  <div class="table-wrap"><table><thead><tr><th>现象</th><th>最可能的原因</th><th>怎么修</th></tr></thead><tbody><tr><td>Authentication failed</td><td>用户名/密码错；密码含特殊字符；用户建在别的数据库</td><td>确认 Database Access 里的账号；重建一个只用字母数字密码的用户；.env 里替换密码</td></tr><tr><td>MongooseServerSelectionError / timed out</td><td>IP 白名单没加；网络不通；集群被暂停</td><td>Network Access 加当前 IP；检查 Wi-Fi；Atlas 里恢复集群</td></tr><tr><td>Could not connect to MongoDB: ... 然后进程退出</td><td>.env 没建好或变量名拼错</td><td>确认文件名是 .env、变量叫 MONGODB_URI、dotenv 在第一行</td></tr><tr><td>GET /api/books 返回空数组 []</td><td>连接串里的数据库名不是 bookstore；或 seed 跑在另一个项目文件夹</td><td>URI 里补上 /bookstore；确认 seed 和 start 在同一个文件夹</td></tr><tr><td>POST 返回 ValidationError</td><td>缺 title / author，或 pages 不是数字、小于 1</td><td>按 Schema 补齐字段；pages 传数字不要传字符串</td></tr><tr><td>GET /api/books/123 返回 400 而不是 404</td><td>_id 格式不合法，触发 CastError</td><td>换成 24 位十六进制的真实 _id</td></tr><tr><td>端口 3000 被占用 EADDRINUSE</td><td>另一个服务占了端口</td><td>在 .env 里改成 PORT=3001，然后访问 http://localhost:3001</td></tr><tr><td>代码 push 后密码泄露</td><td>.env 被提交到了 GitHub</td><td>立刻在 Atlas 轮换密码 / 删除旧用户，并把 .env 加入 .gitignore</td></tr></tbody></table></div>
+<p>快速自检命令：</p>
+<pre class="code"><code>node -e &quot;require(&#x27;dotenv&#x27;).config(); console.log(process.env.MONGODB_URI ? &#x27;URI loaded&#x27; : &#x27;URI MISSING&#x27;)&quot;
+npm start</code></pre>
+</section>
+<section class="card" id="checkpoint-map">
+  <h2><span class="num">16</span>进阶：按 checkpoint 逐个验证（step-05 → final）</h2>
+  <p>下面这张表把每个 checkpoint 和「你要在 MongoDB / API 里看到的结果」一一对应。测试时从左到右核对即可。</p>
+<div class="table-wrap"><table><thead><tr><th>文件夹</th><th>这一步应该测什么</th><th>API 结果</th><th>MongoDB 里核对</th></tr></thead><tbody><tr><td>step-05-connect</td><td>只验证数据库连接与欢迎路由</td><td>GET / → 200 + 欢迎 JSON；还没有 /api/books</td><td>books 集合可能不存在或为空，因为还没 seed</td></tr><tr><td>step-06-schema-model</td><td>确认代码里出现 bookSchema 和 Book 模型</td><td>路由行为与 step-05 完全一样</td><td>没有新文档；这一步不产生 HTTP 变化</td></tr><tr><td>step-07-seed</td><td>运行 npm run seed</td><td>没有新路由；seed 输出 Added 6 books</td><td>use bookstore → db.books.countDocuments() = 6</td></tr><tr><td>step-08-read</td><td>GET 列表与 GET 单本</td><td>GET /api/books = 200 + 6 本；GET /api/books/:id = 200；不存在的 id = 404</td><td>db.books.find() 看到 6 个文档</td></tr><tr><td>step-09-create</td><td>POST 新建一本</td><td>201 + 新对象和新 _id</td><td>countDocuments() 变成 7</td></tr><tr><td>step-10-update</td><td>PUT 修改一本书</td><td>200 + 更新后的对象，pages 已改变</td><td>db.books.find({title:...}) 看到新 pages，updatedAt 变新</td></tr><tr><td>step-11-delete</td><td>DELETE 删除一本书</td><td>204 无响应体；再 GET 回到 6 本</td><td>countDocuments() 回到 6</td></tr><tr><td>step-12-errors-and-filter</td><td>筛选、非法 id、校验失败、未知路由</td><td>?fiction=true 返回 3 本；非法 id = 400；缺字段 = 400；未知路径 = 404</td><td>数据本身不变，验证的是错误处理逻辑</td></tr><tr><td>step-13-modules</td><td>确认拆分后行为不变，且支持跨域</td><td>与 step-12 相同的 CRUD 结果；响应头有 Access-Control-Allow-Origin: *</td><td>seed.js 复用 models/Book.js，数据形状一致</td></tr><tr><td>final</td><td>完整回归测试</td><td>重复 GET / POST / PUT / DELETE + 错误测试，全部符合预期</td><td>所有写操作都能在 mongosh 里看到对应变化</td></tr></tbody></table></div>
+<p>一个干净的逐个测试节奏：</p>
+<pre class="code"><code># 以 step-08-read 为例
+cd book-store-api-checkpoints/step-08-read
+cp ../final/.env .env
+npm install
+npm start
+
+# 另一个终端
+curl -i http://localhost:3000/api/books
+# mongosh 中：use bookstore → db.books.countDocuments()
+
+# 测完
+Ctrl + C</code></pre>
+<aside class="note why"><strong>为什么 step-05 / step-06 看不出 API 变化</strong><ul><li>step-05 只负责连上数据库，step-06 只声明数据长什么样。</li><li>它们不会新增 books 路由，所以浏览器里看不到新接口是正常的。</li><li>真正开始有 API 行为是从 step-07 seed 之后、step-08 read 开始。</li></ul></aside>
+</section>
+<section class="card" id="checklist">
+  <h2><span class="num">17</span>第 14 步：完整测试清单（可勾选）</h2>
+  <p>每完成一项就勾上，全部勾完说明你已经能独立用 MongoDB 测试这个项目了。</p>
+<label class="check"><input type="checkbox"> <span>注册 Atlas 并创建 M0 免费集群</span></label><label class="check"><input type="checkbox"> <span>创建数据库用户 bookuser，并记下密码</span></label><label class="check"><input type="checkbox"> <span>把当前 IP 加入 Network Access</span></label><label class="check"><input type="checkbox"> <span>复制连接串，补上 /bookstore 数据库名</span></label><label class="check"><input type="checkbox"> <span>创建 .env 并填入 MONGODB_URI 与 PORT</span></label><label class="check"><input type="checkbox"> <span>npm install 成功</span></label><label class="check"><input type="checkbox"> <span>npm start 后看到 Connected to MongoDB</span></label><label class="check"><input type="checkbox"> <span>浏览器访问 / 看到欢迎 JSON</span></label><label class="check"><input type="checkbox"> <span>npm run seed 输出 Added 6 books</span></label><label class="check"><input type="checkbox"> <span>mongosh 里 countDocuments() 返回 6</span></label><label class="check"><input type="checkbox"> <span>GET /api/books 返回 6 本并按标题排序</span></label><label class="check"><input type="checkbox"> <span>GET /api/books?fiction=true 返回 3 本</span></label><label class="check"><input type="checkbox"> <span>GET /api/books/:id 返回单本</span></label><label class="check"><input type="checkbox"> <span>POST 返回 201，并拿到新 _id</span></label><label class="check"><input type="checkbox"> <span>PUT 返回 200，pages 更新成功</span></label><label class="check"><input type="checkbox"> <span>DELETE 返回 204，数量回到 6</span></label><label class="check"><input type="checkbox"> <span>非法 _id 返回 400，合法但不存在返回 404</span></label><label class="check"><input type="checkbox"> <span>缺字段 / pages=0 返回 400 ValidationError</span></label><label class="check"><input type="checkbox"> <span>在 mongosh 中核对过 POST / PUT / DELETE 的结果</span></label>
+<aside class="note tip"><strong>最后一步：重置数据</strong><ul><li>测试完成后如果想恢复最初的 6 本书，再运行一次 npm run seed 即可。</li><li>记住它会先清空 books 集合。</li></ul></aside>
+</section>
+  </main>
+
+  <footer>
+    本指南对应 <code>book-store-api-checkpoints</code> 下的各个 checkpoint 与 final 文件夹。所有连接串示例中的密码与集群地址都需替换为你自己的值。
+  </footer>
+</div>
+</body>
+</html>

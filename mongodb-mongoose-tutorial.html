@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MongoDB and Mongoose, Step by Step · HTML 教材</title>
+<style>
+  :root { --accent: #4ade80; --accent-line: #1e4a36; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #0b0f14; color: #dce6f2; line-height: 1.75;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 24px 80px; }
+  header.hero { border-bottom: 1px solid #263244; padding-bottom: 24px; }
+  .back { font-size: 13px; color: #8ea0b8; }
+  .kicker { color: var(--accent); font-size: 12px; letter-spacing: 2px; margin-top: 14px; }
+  h1 { font-size: 30px; margin: 6px 0 6px; }
+  .subtitle { color: #8ea0b8; margin: 0; font-size: 15px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .jump, button {
+    background: #161f2b; color: #dce6f2; border: 1px solid #263244;
+    border-radius: 8px; padding: 7px 13px; font-size: 13px; cursor: pointer;
+  }
+  .jump:hover, button:hover { border-color: var(--accent); color: var(--accent); }
+  .toc {
+    margin: 22px 0 30px; padding: 16px 20px; background: #121821;
+    border: 1px solid #263244; border-radius: 12px;
+  }
+  .toc h2 { font-size: 15px; margin: 0 0 10px; color: #8ea0b8; }
+  .toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+  .toc li { break-inside: avoid; font-size: 13px; margin: 3px 0; }
+  .page {
+    background: #121821; border: 1px solid #263244; border-radius: 12px;
+    padding: 22px 26px; margin-bottom: 20px; scroll-margin-top: 20px;
+  }
+  .page-label {
+    font-size: 11px; color: #64748b; letter-spacing: 1px;
+    border-bottom: 1px dashed #263244; padding-bottom: 8px; margin-bottom: 16px;
+  }
+  h2.part { font-size: 20px; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 12px; margin: 30px 0 16px; }
+  h3.step-heading { font-size: 17px; margin: 26px 0 10px; color: #f1f5f9; }
+  .step-label { color: var(--accent); font-size: 12px; margin-right: 10px; border: 1px solid var(--accent-line); border-radius: 999px; padding: 1px 9px; }
+  p { font-size: 14.5px; margin: 10px 0; }
+  ul, ol { padding-left: 24px; font-size: 14.5px; }
+  li { margin: 5px 0; }
+  pre.code {
+    background: #080c11; border: 1px solid #263244; border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  code { font-family: inherit; }
+  .callout {
+    background: rgba(74,222,128,.06); border-left: 3px solid #4ade80;
+    border-radius: 8px; padding: 12px 16px; margin: 16px 0;
+  }
+  .callout strong { color: #4ade80; font-size: 12px; letter-spacing: 1px; }
+  .callout p { margin: 4px 0 0; font-size: 14px; }
+  .checkpoint {
+    background: #080c11; border: 1px dashed var(--accent-line); border-radius: 8px;
+    padding: 9px 14px; margin: 14px 0; font-size: 13px;
+  }
+  .checkpoint span { color: #8ea0b8; margin-right: 10px; }
+  .figure { margin: 16px 0; }
+  .figure-box {
+    background: #080c11; border: 1px solid #263244; border-radius: 8px;
+    padding: 18px; color: #8ea0b8; font-size: 13px; text-align: center;
+  }
+  .figure-box a { margin-left: 12px; font-size: 12px; }
+  figcaption { color: #8ea0b8; font-size: 12.5px; margin-top: 6px; text-align: center; }
+  details.raw { border: 1px solid #263244; border-radius: 8px; margin-top: 20px; background: #080c11; }
+  details.raw summary { cursor: pointer; padding: 8px 14px; font-size: 12px; color: #8ea0b8; }
+  details.raw pre { margin: 0; padding: 14px; font-size: 12px; color: #94a3b8; white-space: pre-wrap; word-break: break-word; }
+  footer { color: #8ea0b8; font-size: 13px; border-top: 1px solid #263244; margin-top: 30px; padding-top: 16px; }
+  @media (max-width: 700px) { .toc ol { columns: 1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <a class="back" href="index.html">← 返回教材首页</a>
+    <div class="kicker">CSIS 3380 · MODULE 9 · TUTORIAL</div>
+    <h1>MongoDB and Mongoose, Step by Step</h1>
+    <p class="subtitle">Build the Book Store API with Express, MongoDB and Mongoose</p>
+    <div class="toolbar">
+      <a class="jump" href="MongoDB-and-Mongoose-Step-by-Step.pdf" target="_blank">打开原始 PDF ↗</a>
+      <a class="jump" href="#page-1">回到第 1 页</a>
+      <button onclick="document.querySelectorAll('details.raw').forEach(d=>d.open=true)">展开全部原页文本</button>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h2>步骤目录（13 个 Step）</h2>
+    <ol><li><a href="#step-1">Step 1: Documents, collections, databases (10 min)</a></li><li><a href="#step-2">Step 2: Create a free MongoDB Atlas database (15 min)</a></li><li><a href="#step-3">Step 3: Practise CRUD in the MongoDB shell (10 min)</a></li><li><a href="#step-4">Step 4: Start the project and keep the secret in .env (7 min)</a></li><li><a href="#step-5">Step 5: Connect, then listen (6 min)</a></li><li><a href="#step-6">Step 6: The schema and the model (7 min)</a></li><li><a href="#step-7">Step 7: Add sample data with a seed script (5 min)</a></li><li><a href="#step-8">Step 8: READ: GET all books and GET one book (8 min)</a></li><li><a href="#step-9">Step 9: CREATE: POST a new book (7 min)</a></li><li><a href="#step-10">Step 10: UPDATE: PUT a changed book (7 min)</a></li><li><a href="#step-11">Step 11: DELETE a book (4 min)</a></li><li><a href="#step-12">Step 12: One error handler, and a filter (9 min)</a></li><li><a href="#step-13">Step 13: Split the API into modules, and allow a React app (10 min)</a></li></ol>
+  </nav>
+
+  <main>
+<section class="page" id="page-1"><div class="page-label">第 1 页 / 共 30 页</div><p>MongoDB and Mongoose, Step by Step Build the Book Store API with Express, MongoDB and Mongoose In the Quote API tutorial, our data lived in a file, data.json, behind a small &quot;fake database&quot;, records.js. Today you replace it with a real database: MongoDB. You first learn how MongoDB stores data and practise its commands in the MongoDB shell. Then you build a Book Store API: an Express server that uses Mongoose to create, read, update and delete books in MongoDB, with the right status codes and clear JSON errors. At the end you split it into tidy modules, ready for a React front end. Part Steps What you do About A 1 How MongoDB stores data: databases, collections, documents 10 min B 2–3 Create a free cloud database; practise CRUD in the MongoDB shell 25 min C 4–7 Start the project, connect with Mongoose, define the Book model, add sample data 25 min D 8–12 The REST routes: GET, POST, PUT, DELETE, and one error handler 35 min E 13 Split the API into modules and allow a React app to call it 10 min Wrap-up and self-check 5 min Total about 1 h 50 min W H A T  Y O U  N E E D Node.js 20 or newer (node -v), VS Code, Chrome, an API tester (Thunder Client in VS Code, or Postman), and an email address for a free MongoDB Atlas account. Each coding step has a matching folder in</p>
+<div class="checkpoint"><span>对应代码</span><code>checkpoints/: if you get lost, compare your files with it. To run a checkpoint, copy your own .env into</code></div>
+<p>it and run npm install there first.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>C S I S  3 3 8 0  ·  M O D U L E  9  ·  T U T O R I A L
+MongoDB and Mongoose, Step by 
+Step
+Build the Book Store API with Express, MongoDB and Mongoose
+In the Quote API tutorial, our data lived in a file, data.json, behind a small &quot;fake database&quot;, 
+records.js. Today you replace it with a real database: MongoDB. You first learn how MongoDB 
+stores data and practise its commands in the MongoDB shell. Then you build a Book Store API: an 
+Express server that uses Mongoose to create, read, update and delete books in MongoDB, with the right 
+status codes and clear JSON errors. At the end you split it into tidy modules, ready for a React front end.
+Part Steps What you do About
+A 1 How MongoDB stores data: databases, collections, 
+documents
+10 min
+B 2–3 Create a free cloud database; practise CRUD in the 
+MongoDB shell
+25 min
+C 4–7 Start the project, connect with Mongoose, define the 
+Book model, add sample data
+25 min
+D 8–12 The REST routes: GET, POST, PUT, DELETE, and one error 
+handler
+35 min
+E 13 Split the API into modules and allow a React app to call it 10 min
+Wrap-up and self-check 5 min
+Total about 1 h 50 
+min
+W H A T  Y O U  N E E D
+Node.js 20 or newer (node -v), VS Code, Chrome, an API tester (Thunder Client in VS Code, or Postman), 
+and an email address for a free MongoDB Atlas account. Each coding step has a matching folder in 
+checkpoints/: if you get lost, compare your files with it. To run a checkpoint, copy your own .env into 
+it and run npm install there first.
+1</pre></details></section>
+<section class="page" id="page-2"><div class="page-label">第 2 页 / 共 30 页</div><h2 id="part-Part-A-How-MongoDB-stores-data">Part A: How MongoDB stores data</h2>
+<h3 id="step-1" class="step-heading"><span class="step-label">Step 1</span>Documents, collections, databases (10 min)</h3>
+<p>You already know SQL (relational) databases: data sits in tables, every row has the same columns, and you query it with the SQL language. MongoDB is a NoSQL database: it stores documents, which look like the JSON objects you send from an API, and groups them in collections.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 1<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=2" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>SQL keeps rows in tables; MongoDB keeps JSON-like documents in collections</figcaption></figure>
+<p>A few things to notice:</p>
+<ul><li>A document is a set of field: value pairs, like a JavaScript object. Values can be strings, numbers, booleans, dates, arrays and nested objects.</li><li>MongoDB stores documents as BSON (binary JSON), so it also knows types JSON does not have, such as ObjectId and Date.</li><li>Every document gets a unique _id, an ObjectId such as 6afd4979ae906cdf708e8f47. You never have to create ids yourself.</li><li>MongoDB itself does not force documents to look alike. That is flexible, but risky: a typo such as titel would be saved without a word. In Step 6, Mongoose adds the rules.</li></ul>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 2<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=2" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a cluster holds databases, a database holds collections, a collection holds documents</figcaption></figure><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part A: How MongoDB stores data
+Step 1: Documents, collections, databases (10 min)
+You already know SQL (relational) databases: data sits in tables, every row has the same columns, and 
+you query it with the SQL language. MongoDB is a NoSQL database: it stores documents, which look like 
+the JSON objects you send from an API, and groups them in collections.
+Figure 1 — SQL keeps rows in tables; MongoDB keeps JSON-like documents in collections
+A few things to notice:
+• A document is a set of field: value pairs, like a JavaScript object. Values can be strings, 
+numbers, booleans, dates, arrays and nested objects.
+• MongoDB stores documents as BSON (binary JSON), so it also knows types JSON does not have, 
+such as ObjectId and Date.
+• Every document gets a unique _id, an ObjectId such as 6afd4979ae906cdf708e8f47. You 
+never have to create ids yourself.
+• MongoDB itself does not force documents to look alike. That is flexible, but risky: a typo such as 
+titel would be saved without a word. In Step 6, Mongoose adds the rules.
+Figure 2 — a cluster holds databases, a database holds collections, a collection holds documents
+2</pre></details></section>
+<section class="page" id="page-3"><div class="page-label">第 3 页 / 共 30 页</div><aside class="callout"><strong>CHECKYOURSELF</strong><p>In SQL words, what is a MongoDB collection? And a document? (A table, and a row.)</p></aside>
+<h2 id="part-Part-B-A-database-to-work-with">Part B: A database to work with</h2>
+<h3 id="step-2" class="step-heading"><span class="step-label">Step 2</span>Create a free MongoDB Atlas database (15 min)</h3>
+<p>MongoDB Atlas is MongoDB in the cloud. Its free tier is enough for the whole course, and the same database works from your laptop and, later, from a deployed server.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 3<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=3" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>five steps to a free cloud database</figcaption></figure>
+<ol><li>Go to mongodb.com/atlas and sign up (or sign in with Google). Create a project, for example CSIS 3380.</li><li>Create a cluster: choose the Free tier (M0), keep the suggested provider, pick a region near you, and press Create. It takes a minute or two.</li><li>Database user: Atlas asks you to create one. Choose a username (for example bookuser) and a password without @, : or / (letters and numbers are safest). Write both down. This user is for your app; it is not your Atlas login.</li><li>Network access: add your current IP address. For class, where your IP changes from place to place, you may add 0.0.0.0/0 (access from anywhere); the password still protects the data.</li><li>Connect: on your cluster press Connect › Drivers, choose Node.js, and copy the connection string. Keep it for Step 4. It looks like this:</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>C H E C K  Y O U R S E L F
+In SQL words, what is a MongoDB collection? And a document? (A table, and a row.)
+Part B: A database to work with
+Step 2: Create a free MongoDB Atlas database (15 min)
+MongoDB Atlas is MongoDB in the cloud. Its free tier is enough for the whole course, and the same 
+database works from your laptop and, later, from a deployed server.
+Figure 3 — five steps to a free cloud database
+1. Go to mongodb.com/atlas and sign up (or sign in with Google). Create a project, for example 
+CSIS 3380.
+2. Create a cluster: choose the Free tier (M0), keep the suggested provider, pick a region near you, 
+and press Create. It takes a minute or two.
+3. Database user: Atlas asks you to create one. Choose a username (for example bookuser) and a 
+password without @, : or / (letters and numbers are safest). Write both down. This user is for 
+your app; it is not your Atlas login.
+4. Network access: add your current IP address. For class, where your IP changes from place to place, 
+you may add 0.0.0.0/0 (access from anywhere); the password still protects the data.
+5. Connect: on your cluster press Connect › Drivers, choose Node.js, and copy the connection string. 
+Keep it for Step 4. It looks like this:
+3</pre></details></section>
+<section class="page" id="page-4"><div class="page-label">第 4 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 4<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=4" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the parts of a connection string</figcaption></figure>
+<p>Y O U R  P A S S W O R D  I S  I N  T H E  C O N N E C T I O N  S T R I N G Treat it like a password: never put it in your code, never commit it to GitHub, and never paste it in a public chat. In Step 4 it goes in a file called .env that Git ignores. P R E F E R  A  L O C A L  D A T A B A S E ? Install MongoDB Community Server (and the free GUI MongoDB Compass) from mongodb.com. Your connection string is then mongodb://127.0.0.1:27017/bookstore. Everything else in this tutorial is the same.</p>
+<h3 id="step-3" class="step-heading"><span class="step-label">Step 3</span>Practise CRUD in the MongoDB shell (10 min)</h3>
+<p>The MongoDB shell, mongosh, lets you type commands straight to the database. It is the best way to see what MongoDB itself does before Mongoose wraps it. (If you cannot install it, open your cluster in Atlas and use Browse Collections, which does the same with buttons.)</p>
+<ol><li>Install mongosh from mongodb.com/try/download/shell, or press Connect › Shell in Atlas, which shows the exact command with your cluster address.</li><li>Connect, then switch to a practice database with use library. It does not exist yet: MongoDB creates a database and a collection the first time you save something in them.</li><li>Create and Read. Type these commands one at a time and compare your output:</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 4 — the parts of a connection string
+Y O U R  P A S S W O R D  I S  I N  T H E  C O N N E C T I O N  S T R I N G
+Treat it like a password: never put it in your code, never commit it to GitHub, and never paste it in a 
+public chat. In Step 4 it goes in a file called .env that Git ignores.
+P R E F E R  A  L O C A L  D A T A B A S E ?
+Install MongoDB Community Server (and the free GUI MongoDB Compass) from mongodb.com. Your 
+connection string is then mongodb://127.0.0.1:27017/bookstore. Everything else in this tutorial is 
+the same.
+Step 3: Practise CRUD in the MongoDB shell (10 min)
+The MongoDB shell, mongosh, lets you type commands straight to the database. It is the best way to 
+see what MongoDB itself does before Mongoose wraps it. (If you cannot install it, open your cluster in 
+Atlas and use Browse Collections, which does the same with buttons.)
+1. Install mongosh from mongodb.com/try/download/shell, or press Connect › Shell in Atlas, which 
+shows the exact command with your cluster address.
+2. Connect, then switch to a practice database with use library. It does not exist yet: MongoDB 
+creates a database and a collection the first time you save something in them.
+3. Create and Read. Type these commands one at a time and compare your output:
+4</pre></details></section>
+<section class="page" id="page-5"><div class="page-label">第 5 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 5<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=5" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>insert documents, then find them with a filter and a sort</figcaption></figure>
+<ul><li>insertOne({...}) saves one document and answers with its new _id; insertMany([...]) saves several.</li><li>find() returns every document. The first argument is a filter: { fiction: true } means &quot;where fiction is true&quot;. The second (optional) is a projection: which fields to show.</li><li>Operators start with $: { pages: { $gt: 400 } } means &quot;more than 400 pages&quot; ($lt is less than, $gte and $lte include the value). .sort({ pages: -1 }) sorts from most to fewest.</li></ul>
+<ol><li>Update and Delete:</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 6<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=5" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>update with $set, delete, count, and drop the practice database</figcaption></figure>
+<ul><li>updateOne(filter, { $set: {...} }) changes only the fields inside $set. Without $set, the update would replace the whole document.</li><li>deleteOne(filter) removes the first match; deleteMany(filter) removes every match (deleteMany({}) empties the collection).</li></ul><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 5 — insert documents, then find them with a filter and a sort
+• insertOne({...}) saves one document and answers with its new _id; insertMany([...]) 
+saves several.
+• find() returns every document. The first argument is a filter: { fiction: true } means 
+&quot;where fiction is true&quot;. The second (optional) is a projection: which fields to show.
+• Operators start with $: { pages: { $gt: 400 } } means &quot;more than 400 pages&quot; ($lt is less 
+than, $gte and $lte include the value). .sort({ pages: -1 }) sorts from most to fewest.
+4. Update and Delete:
+Figure 6 — update with $set, delete, count, and drop the practice database
+• updateOne(filter, { $set: {...} }) changes only the fields inside $set. Without 
+$set, the update would replace the whole document.
+• deleteOne(filter) removes the first match; deleteMany(filter) removes every match 
+(deleteMany({}) empties the collection).
+5</pre></details></section>
+<section class="page" id="page-6"><div class="page-label">第 6 页 / 共 30 页</div><ul><li>db.dropDatabase() deletes the whole practice database. Commands in the shell are permanent: there is no undo. T R Y  I T Before you drop library, write the command that finds the books with fewer than 450 pages, showing only their titles. (Answer: db.books.find({ pages: { $lt: 450 } }, { title: 1, _id: 0 }).)</li></ul><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>• db.dropDatabase() deletes the whole practice database. Commands in the shell are 
+permanent: there is no undo.
+T R Y  I T
+Before you drop library, write the command that finds the books with fewer than 450 pages, showing 
+only their titles. (Answer: db.books.find({ pages: { $lt: 450 } }, { title: 1, _id: 
+0 }).)
+6</pre></details></section>
+<section class="page" id="page-7"><div class="page-label">第 7 页 / 共 30 页</div><h2 id="part-Part-C-Connect-Node-js-to-MongoDB-with-Mongoose">Part C: Connect Node.js to MongoDB with Mongoose</h2>
+<h3 id="step-4" class="step-heading"><span class="step-label">Step 4</span>Start the project and keep the secret in .env (7 min)</h3>
+<ol><li>Create the project and install three packages:</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 7<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=7" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>create the project, install the packages, start the server</figcaption></figure>
+<ul><li>express: the web server you know.</li><li>mongoose: an ODM (Object Data Modeling) library: it connects to MongoDB, checks your data against rules, and gives you methods such as Book.find().</li><li>dotenv: reads a file called .env into process.env, so secrets stay out of your code.</li></ul>
+<ol><li>Open package.json and add a start script (and a seed script for Step 7):</li></ol>
+<pre class="code"><code>&quot;scripts&quot;: {
+  &quot;start&quot;: &quot;node --watch server.js&quot;,
+  &quot;seed&quot;: &quot;node seed.js&quot;
+},</code></pre>
+<ol><li>Create a file called .env (with the dot, no name before it) next to package.json. Paste your connection string from Step 2, put your password in place of &lt;db_password&gt;, and add the database name bookstore after .mongodb.net/:</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part C: Connect Node.js to MongoDB with Mongoose
+Step 4: Start the project and keep the secret in .env (7 min)
+1. Create the project and install three packages:
+Figure 7 — create the project, install the packages, start the server
+• express: the web server you know.
+• mongoose: an ODM (Object Data Modeling) library: it connects to MongoDB, checks your data 
+against rules, and gives you methods such as Book.find().
+• dotenv: reads a file called .env into process.env, so secrets stay out of your code.
+2. Open package.json and add a start script (and a seed script for Step 7):
+ 
+&quot;scripts&quot;: {
+  &quot;start&quot;: &quot;node --watch server.js&quot;,
+  &quot;seed&quot;: &quot;node seed.js&quot;
+},
+ 
+3. Create a file called .env (with the dot, no name before it) next to package.json. Paste your 
+connection string from Step 2, put your password in place of &lt;db_password&gt;, and add the 
+database name bookstore after .mongodb.net/:
+7</pre></details></section>
+<section class="page" id="page-8"><div class="page-label">第 8 页 / 共 30 页</div><pre class="code"><code>MONGODB_URI=mongodb+srv://bookuser:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/
+bookstore?retryWrites=true&amp;w=majority
+PORT=3000</code></pre>
+<ol><li>Create .gitignore so Git never uploads the secret or the packages:</li></ol>
+<p>node_modules/ .env</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>The starter/ folder is this project after Step 4 (it has a .env.example instead of .env: copy it to .env and fill in your own string).</p></aside>
+<h3 id="step-5" class="step-heading"><span class="step-label">Step 5</span>Connect, then listen (6 min)</h3>
+<p>Create server.js. The rule is simple: connect to MongoDB first, then start listening. An API that cannot reach its database should not pretend to work.</p>
+<pre class="code"><code>// Book Store API: Express + MongoDB + Mongoose</code></pre>
+<pre class="code"><code>require(&#x27;dotenv&#x27;).config({ quiet: true });   // reads .env into process.env
+const express = require(&#x27;express&#x27;);
+const mongoose = require(&#x27;mongoose&#x27;);</code></pre>
+<pre class="code"><code>const app = express();
+const port = process.env.PORT || 3000;</code></pre>
+<pre class="code"><code>app.use(express.json());   // reads JSON request bodies into req.body</code></pre>
+<pre class="code"><code>// A first route, to check the server is up</code></pre>
+<pre class="code"><code>app.get(&#x27;/&#x27;, (req, res) =&gt; {
+  res.json({ message: &#x27;Welcome to the Book Store API&#x27; });
+});</code></pre>
+<pre class="code"><code>// Connect to MongoDB first; only then start listening for requests</code></pre>
+<pre class="code"><code>async function start() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log(&#x27;Connected to MongoDB&#x27;);
+    app.listen(port, () =&gt; {
+      console.log(`Book Store API listening on http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error(&#x27;Could not connect to MongoDB:&#x27;, err.message);
+    process.exit(1);
+  }
+}</code></pre><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>MONGODB_URI=mongodb+srv://bookuser:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/
+bookstore?retryWrites=true&amp;w=majority
+PORT=3000
+ 
+4. Create .gitignore so Git never uploads the secret or the packages:
+ 
+node_modules/
+.env
+ 
+C H E C K P O I N T
+The starter/ folder is this project after Step 4 (it has a .env.example instead of .env: copy it to .env 
+and fill in your own string).
+Step 5: Connect, then listen (6 min)
+Create server.js. The rule is simple: connect to MongoDB first, then start listening. An API that 
+cannot reach its database should not pretend to work.
+ 
+// Book Store API: Express + MongoDB + Mongoose
+require(&#x27;dotenv&#x27;).config({ quiet: true });   // reads .env into process.env
+const express = require(&#x27;express&#x27;);
+const mongoose = require(&#x27;mongoose&#x27;);
+ 
+const app = express();
+const port = process.env.PORT || 3000;
+ 
+app.use(express.json());   // reads JSON request bodies into req.body
+ 
+// A first route, to check the server is up
+app.get(&#x27;/&#x27;, (req, res) =&gt; {
+  res.json({ message: &#x27;Welcome to the Book Store API&#x27; });
+});
+ 
+// Connect to MongoDB first; only then start listening for requests
+async function start() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log(&#x27;Connected to MongoDB&#x27;);
+    app.listen(port, () =&gt; {
+      console.log(`Book Store API listening on http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error(&#x27;Could not connect to MongoDB:&#x27;, err.message);
+    process.exit(1);
+  }
+}
+8</pre></details></section>
+<section class="page" id="page-9"><div class="page-label">第 9 页 / 共 30 页</div><p>start();</p>
+<ul><li>require(&#x27;dotenv&#x27;).config() must be the first line, so process.env.MONGODB_URI exists before anything uses it.</li><li>mongoose.connect() returns a Promise, so we await it inside an async function, in try/catch like the routes of the Quote API.</li><li>process.env.PORT || 3000: a hosting service sets PORT itself; on your laptop it is 3000. Run npm start. You should see Connected to MongoDB and then the &quot;listening&quot; line (Figure 7). Open http://localhost:3000/:</li></ul>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 8<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=9" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the server is up and connected</figcaption></figure>
+<p>If something is wrong with the connection string, the server stops and tells you why:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 9<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=9" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a wrong password: the server does not start</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-05-connect</p></aside>
+<h3 id="step-6" class="step-heading"><span class="step-label">Step 6</span>The schema and the model (7 min)</h3>
+<p>MongoDB accepts any document. Mongoose lets us say what a book must look like: a schema. From the schema we make a model, Book, the object every route uses to talk to the books collection.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>start();
+ 
+• require(&#x27;dotenv&#x27;).config() must be the first line, so process.env.MONGODB_URI 
+exists before anything uses it.
+• mongoose.connect() returns a Promise, so we await it inside an async function, in 
+try/catch like the routes of the Quote API.
+• process.env.PORT || 3000: a hosting service sets PORT itself; on your laptop it is 3000.
+Run npm start. You should see Connected to MongoDB and then the &quot;listening&quot; line (Figure 7). Open 
+http://localhost:3000/:
+Figure 8 — the server is up and connected
+If something is wrong with the connection string, the server stops and tells you why:
+Figure 9 — a wrong password: the server does not start
+C H E C K P O I N T
+checkpoints/step-05-connect
+Step 6: The schema and the model (7 min)
+MongoDB accepts any document. Mongoose lets us say what a book must look like: a schema. From the 
+schema we make a model, Book, the object every route uses to talk to the books collection.
+9</pre></details></section>
+<section class="page" id="page-10"><div class="page-label">第 10 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 10<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=10" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>where Mongoose fits between your routes and MongoDB</figcaption></figure>
+<p>Add this to server.js, under the require lines and above const app = express();:</p>
+<pre class="code"><code>// A schema describes what every book document must look like</code></pre>
+<pre class="code"><code>const bookSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    pages: { type: Number, required: true, min: 1 },
+    fiction: { type: Boolean, default: false }
+  },
+  { timestamps: true }   // adds createdAt and updatedAt
+);</code></pre>
+<pre class="code"><code>// The model is the tool we use to read and write the &quot;books&quot; collection</code></pre>
+<pre class="code"><code>const Book = mongoose.model(&#x27;Book&#x27;, bookSchema);</code></pre>
+<p>Option Meaning type the kind of value: String, Number, Boolean, Date, [String] (an array) … required: true a book without this field is refused trim: true spaces at the start and end are removed before saving min: 1 a number must be at least 1 (max, minLength, maxLength and enum exist too) default: false the value used when the field is missing { timestamps: true } Mongoose adds createdAt and updatedAt and keeps them up to date The model name &#x27;Book&#x27; becomes the collection name books (lower case, plural). Here is what a saved book will look like:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 10 — where Mongoose fits between your routes and MongoDB
+Add this to server.js, under the require lines and above const app = express();:
+ 
+// A schema describes what every book document must look like
+const bookSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    pages: { type: Number, required: true, min: 1 },
+    fiction: { type: Boolean, default: false }
+  },
+  { timestamps: true }   // adds createdAt and updatedAt
+);
+ 
+// The model is the tool we use to read and write the &quot;books&quot; collection
+const Book = mongoose.model(&#x27;Book&#x27;, bookSchema);
+ 
+Option Meaning
+type the kind of value: String, Number, Boolean, Date, [String] (an array) …
+required: true a book without this field is refused
+trim: true spaces at the start and end are removed before saving
+min: 1 a number must be at least 1 (max, minLength, maxLength and enum exist too)
+default: false the value used when the field is missing
+{ timestamps: 
+true }
+Mongoose adds createdAt and updatedAt and keeps them up to date
+The model name &#x27;Book&#x27; becomes the collection name books (lower case, plural). Here is what a 
+saved book will look like:
+10</pre></details></section>
+<section class="page" id="page-11"><div class="page-label">第 11 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 11<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=11" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>from the schema to a saved document</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-06-schema-model</p></aside>
+<h3 id="step-7" class="step-heading"><span class="step-label">Step 7</span>Add sample data with a seed script (5 min)</h3>
+<p>An empty database is hard to test. A seed script fills it with sample data, and you can run it again whenever you want a fresh start.</p>
+<ol><li>Create seed.js next to server.js. For now it needs its own copy of the model (Step 13 removes that copy):</li></ol>
+<pre class="code"><code>// seed.js: fill the books collection with sample data.  Run:  npm run seed</code></pre>
+<pre class="code"><code>require(&#x27;dotenv&#x27;).config({ quiet: true });
+const mongoose = require(&#x27;mongoose&#x27;);</code></pre>
+<pre class="code"><code>// the same schema and model as in server.js</code></pre>
+<pre class="code"><code>const Book = mongoose.model(&#x27;Book&#x27;, new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    pages: { type: Number, required: true, min: 1 },
+    fiction: { type: Boolean, default: false }
+  },
+  { timestamps: true }
+));</code></pre>
+<pre class="code"><code>const books = [
+  { title: &#x27;Clean Code&#x27;, author: &#x27;Robert C. Martin&#x27;, pages: 464, fiction: false },
+  { title: &#x27;The Pragmatic Programmer&#x27;, author: &#x27;David Thomas&#x27;, pages: 352, fiction:
+false },
+  { title: &#x27;Eloquent JavaScript&#x27;, author: &#x27;Marijn Haverbeke&#x27;, pages: 472, fiction:
+false },
+  { title: &#x27;The Hobbit&#x27;, author: &#x27;J.R.R. Tolkien&#x27;, pages: 310, fiction: true },
+  { title: &#x27;Dune&#x27;, author: &#x27;Frank Herbert&#x27;, pages: 412, fiction: true },
+  { title: &#x27;Project Hail Mary&#x27;, author: &#x27;Andy Weir&#x27;, pages: 476, fiction: true }
+];</code></pre><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 11 — from the schema to a saved document
+C H E C K P O I N T
+checkpoints/step-06-schema-model
+Step 7: Add sample data with a seed script (5 min)
+An empty database is hard to test. A seed script fills it with sample data, and you can run it again 
+whenever you want a fresh start.
+1. Create seed.js next to server.js. For now it needs its own copy of the model (Step 13 
+removes that copy):
+ 
+// seed.js: fill the books collection with sample data.  Run:  npm run seed
+require(&#x27;dotenv&#x27;).config({ quiet: true });
+const mongoose = require(&#x27;mongoose&#x27;);
+ 
+// the same schema and model as in server.js
+const Book = mongoose.model(&#x27;Book&#x27;, new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    pages: { type: Number, required: true, min: 1 },
+    fiction: { type: Boolean, default: false }
+  },
+  { timestamps: true }
+));
+ 
+const books = [
+  { title: &#x27;Clean Code&#x27;, author: &#x27;Robert C. Martin&#x27;, pages: 464, fiction: false },
+  { title: &#x27;The Pragmatic Programmer&#x27;, author: &#x27;David Thomas&#x27;, pages: 352, fiction: 
+false },
+  { title: &#x27;Eloquent JavaScript&#x27;, author: &#x27;Marijn Haverbeke&#x27;, pages: 472, fiction: 
+false },
+  { title: &#x27;The Hobbit&#x27;, author: &#x27;J.R.R. Tolkien&#x27;, pages: 310, fiction: true },
+  { title: &#x27;Dune&#x27;, author: &#x27;Frank Herbert&#x27;, pages: 412, fiction: true },
+  { title: &#x27;Project Hail Mary&#x27;, author: &#x27;Andy Weir&#x27;, pages: 476, fiction: true }
+];
+11</pre></details></section>
+<section class="page" id="page-12"><div class="page-label">第 12 页 / 共 30 页</div><pre class="code"><code>async function seed() {
+  await mongoose.connect(process.env.MONGODB_URI);
+  await Book.deleteMany({});                 // start from an empty collection
+  const saved = await Book.insertMany(books);
+  console.log(`Added ${saved.length} books`);
+  await mongoose.disconnect();               // a script must close the connection
+to finish
+}</code></pre>
+<pre class="code"><code>seed().catch((err) =&gt; {
+  console.error(err.message);
+  process.exit(1);
+});</code></pre>
+<ol><li>Run it in a second terminal (leave the server running in the first):</li></ol>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 12<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=12" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the seed script added six books</figcaption></figure>
+<ol><li>Check in Atlas (Browse Collections › bookstore › books) or in mongosh (use bookstore, then db.books.find()): six documents, each with an _id, createdAt and updatedAt.</li></ol>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-07-seed</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>async function seed() {
+  await mongoose.connect(process.env.MONGODB_URI);
+  await Book.deleteMany({});                 // start from an empty collection
+  const saved = await Book.insertMany(books);
+  console.log(`Added ${saved.length} books`);
+  await mongoose.disconnect();               // a script must close the connection 
+to finish
+}
+ 
+seed().catch((err) =&gt; {
+  console.error(err.message);
+  process.exit(1);
+});
+ 
+2. Run it in a second terminal (leave the server running in the first):
+Figure 12 — the seed script added six books
+3. Check in Atlas (Browse Collections › bookstore › books) or in mongosh (use bookstore, then 
+db.books.find()): six documents, each with an _id, createdAt and updatedAt.
+C H E C K P O I N T
+checkpoints/step-07-seed
+12</pre></details></section>
+<section class="page" id="page-13"><div class="page-label">第 13 页 / 共 30 页</div><h2 id="part-Part-D-The-REST-routes">Part D: The REST routes</h2>
+<h3 id="step-8" class="step-heading"><span class="step-label">Step 8</span>READ: GET all books and GET one book (8 min)</h3>
+<p>The Book Store API has the same shape as the Quote API: one resource, five endpoints.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 13<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=13" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the plan</figcaption></figure>
+<p>The model&#x27;s methods do the database work. Each one returns a Promise, so every route is async and every call has await, exactly like records.js:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 14<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=13" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the Mongoose methods you use today, and their mongosh twins</figcaption></figure>
+<p>Add two routes under the / route:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part D: The REST routes
+Step 8: READ: GET all books and GET one book (8 min)
+The Book Store API has the same shape as the Quote API: one resource, five endpoints.
+Figure 13 — the plan
+The model&#x27;s methods do the database work. Each one returns a Promise, so every route is async and 
+every call has await, exactly like records.js:
+Figure 14 — the Mongoose methods you use today, and their mongosh twins
+Add two routes under the / route:
+13</pre></details></section>
+<section class="page" id="page-14"><div class="page-label">第 14 页 / 共 30 页</div><pre class="code"><code>// GET /api/books -&gt; every book</code></pre>
+<pre class="code"><code>app.get(&#x27;/api/books&#x27;, async (req, res) =&gt; {
+  const books = await Book.find();
+  res.json(books);
+});</code></pre>
+<pre class="code"><code>// GET /api/books/:id -&gt; one book, or 404</code></pre>
+<pre class="code"><code>app.get(&#x27;/api/books/:id&#x27;, async (req, res) =&gt; {
+  const book = await Book.findById(req.params.id);
+  if (!book) {
+    return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+  }
+  res.json(book);
+});</code></pre>
+<p>Open http://localhost:3000/api/books and tick Pretty-print:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 15<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=14" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>GET /api/books: the six books from MongoDB</figcaption></figure>
+<p>Copy the _id of one book (yours are different from the ones in the pictures) and open /api/books/&lt;that id&gt;:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>// GET /api/books -&gt; every book
+app.get(&#x27;/api/books&#x27;, async (req, res) =&gt; {
+  const books = await Book.find();
+  res.json(books);
+});
+ 
+// GET /api/books/:id -&gt; one book, or 404
+app.get(&#x27;/api/books/:id&#x27;, async (req, res) =&gt; {
+  const book = await Book.findById(req.params.id);
+  if (!book) {
+    return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+  }
+  res.json(book);
+});
+ 
+Open http://localhost:3000/api/books and tick Pretty-print:
+Figure 15 — GET /api/books: the six books from MongoDB
+Copy the _id of one book (yours are different from the ones in the pictures) and open 
+/api/books/&lt;that id&gt;:
+14</pre></details></section>
+<section class="page" id="page-15"><div class="page-label">第 15 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 16<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=15" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>GET /api/books/:id: one book</figcaption></figure>
+<p>Now change one character of the id and try again: a valid id that is not in the collection. findById answers null, so the route sends 404:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 17<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=15" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>a valid id that does not exist: 404</figcaption></figure>
+<p>N O T  E V E R Y  S T R I N G  I S  A N  I D Try /api/books/abc. An ObjectId is exactly 24 hexadecimal characters, so Mongoose cannot even search: it throws a CastError, and for now Express answers with a 500 HTML page. You turn that into a clear 400 in Step 12.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-08-read</p></aside>
+<h3 id="step-9" class="step-heading"><span class="step-label">Step 9</span>CREATE: POST a new book (7 min)</h3>
+<pre class="code"><code>// POST /api/books -&gt; create a book (201)</code></pre>
+<pre class="code"><code>app.post(&#x27;/api/books&#x27;, async (req, res) =&gt; {
+  const { title, author, pages, fiction } = req.body;
+  const book = await Book.create({ title, author, pages, fiction });
+  res.status(201).json(book);
+});</code></pre><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 16 — GET /api/books/:id: one book
+Now change one character of the id and try again: a valid id that is not in the collection. findById 
+answers null, so the route sends 404:
+Figure 17 — a valid id that does not exist: 404
+N O T  E V E R Y  S T R I N G  I S  A N  I D
+Try /api/books/abc. An ObjectId is exactly 24 hexadecimal characters, so Mongoose cannot even 
+search: it throws a CastError, and for now Express answers with a 500 HTML page. You turn that into a 
+clear 400 in Step 12.
+C H E C K P O I N T
+checkpoints/step-08-read
+Step 9: CREATE: POST a new book (7 min)
+ 
+// POST /api/books -&gt; create a book (201)
+app.post(&#x27;/api/books&#x27;, async (req, res) =&gt; {
+  const { title, author, pages, fiction } = req.body;
+  const book = await Book.create({ title, author, pages, fiction });
+  res.status(201).json(book);
+});
+ 
+15</pre></details></section>
+<section class="page" id="page-16"><div class="page-label">第 16 页 / 共 30 页</div><ul><li>We pick the four fields we accept from req.body instead of passing the whole body. A client cannot sneak in other fields (Mongoose would also drop fields that are not in the schema).</li><li>Book.create() validates the data against the schema, saves it, and returns the saved document, with its _id. In your API tester: POST http://localhost:3000/api/books, Body JSON:</li></ul>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 18<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=16" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>201 Created: the book as MongoDB saved it</figcaption></figure>
+<p>Now send a book without an author and pages:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>• We pick the four fields we accept from req.body instead of passing the whole body. A client 
+cannot sneak in other fields (Mongoose would also drop fields that are not in the schema).
+• Book.create() validates the data against the schema, saves it, and returns the saved 
+document, with its _id.
+In your API tester: POST http://localhost:3000/api/books, Body JSON:
+Figure 18 — 201 Created: the book as MongoDB saved it
+Now send a book without an author and pages:
+16</pre></details></section>
+<section class="page" id="page-17"><div class="page-label">第 17 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 19<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=17" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the schema refused the book, but the client gets a 500 HTML page</figcaption></figure>
+<p>The schema did its job: nothing was saved. But a ValidationError is the client&#x27;s mistake, so it should be a 400 with a JSON message. Step 12 fixes every error like this in one place.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-09-create</p></aside>
+<h3 id="step-10" class="step-heading"><span class="step-label">Step 10</span>UPDATE: PUT a changed book (7 min)</h3>
+<pre class="code"><code>// PUT /api/books/:id -&gt; update a book, send back the new version</code></pre>
+<pre class="code"><code>app.put(&#x27;/api/books/:id&#x27;, async (req, res) =&gt; {
+  const { title, author, pages, fiction } = req.body;
+  const book = await Book.findByIdAndUpdate(
+    req.params.id,
+    { title, author, pages, fiction },
+    { returnDocument: &#x27;after&#x27;, runValidators: true }   // send back the updated
+book; check the schema rules
+  );
+  if (!book) {
+    return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+  }
+  res.json(book);
+});</code></pre>
+<p>findByIdAndUpdate(id, changes, options) finds the book, applies the changes and saves it, in one call. Two options matter:</p>
+<ul><li>returnDocument: &#x27;after&#x27;: send back the book after the update. Without it, Mongoose returns the old version, which confuses everyone. (Older tutorials write new: true; Mongoose 9 warns that it is deprecated.)</li></ul><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 19 — the schema refused the book, but the client gets a 500 HTML page
+The schema did its job: nothing was saved. But a ValidationError is the client&#x27;s mistake, so it 
+should be a 400 with a JSON message. Step 12 fixes every error like this in one place.
+C H E C K P O I N T
+checkpoints/step-09-create
+Step 10: UPDATE: PUT a changed book (7 min)
+ 
+// PUT /api/books/:id -&gt; update a book, send back the new version
+app.put(&#x27;/api/books/:id&#x27;, async (req, res) =&gt; {
+  const { title, author, pages, fiction } = req.body;
+  const book = await Book.findByIdAndUpdate(
+    req.params.id,
+    { title, author, pages, fiction },
+    { returnDocument: &#x27;after&#x27;, runValidators: true }   // send back the updated 
+book; check the schema rules
+  );
+  if (!book) {
+    return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+  }
+  res.json(book);
+});
+ 
+findByIdAndUpdate(id, changes, options) finds the book, applies the changes and saves it, 
+in one call. Two options matter:
+• returnDocument: &#x27;after&#x27;: send back the book after the update. Without it, Mongoose 
+returns the old version, which confuses everyone. (Older tutorials write new: true; Mongoose 9 
+warns that it is deprecated.)
+17</pre></details></section>
+<section class="page" id="page-18"><div class="page-label">第 18 页 / 共 30 页</div><ul><li>runValidators: true: check the schema rules on updates too. Without it, pages: 0 would be saved. Fields you leave out of the body are undefined, and Mongoose leaves them unchanged.</li></ul>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 20<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=18" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>PUT returns 200 and the updated book; updatedAt changed by itself</figcaption></figure>
+<p>2 0 4  O R  2 0 0 ? In the Quote API, PUT answered 204 No Content. Here it answers 200 with the updated book. Both are correct REST; sending the book back saves a React app a second request.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-10-update</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>• runValidators: true: check the schema rules on updates too. Without it, pages: 0 would 
+be saved.
+Fields you leave out of the body are undefined, and Mongoose leaves them unchanged.
+Figure 20 — PUT returns 200 and the updated book; updatedAt changed by itself
+2 0 4  O R  2 0 0 ?
+In the Quote API, PUT answered 204 No Content. Here it answers 200 with the updated book. Both are 
+correct REST; sending the book back saves a React app a second request.
+C H E C K P O I N T
+checkpoints/step-10-update
+18</pre></details></section>
+<section class="page" id="page-19"><div class="page-label">第 19 页 / 共 30 页</div><h3 id="step-11" class="step-heading"><span class="step-label">Step 11</span>DELETE a book (4 min)</h3>
+<pre class="code"><code>// DELETE /api/books/:id -&gt; remove a book (204)</code></pre>
+<pre class="code"><code>app.delete(&#x27;/api/books/:id&#x27;, async (req, res) =&gt; {
+  const book = await Book.findByIdAndDelete(req.params.id);
+  if (!book) {
+    return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+  }
+  res.status(204).end();
+});</code></pre>
+<p>findByIdAndDelete returns the deleted document, or null if there was nothing to delete, which gives us the 404.</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 21<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=19" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>DELETE returns 204, and 404 the second time</figcaption></figure>
+<p>You now have full CRUD on a real database. Run npm run seed whenever you want the six sample books back.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-11-delete</p></aside>
+<h3 id="step-12" class="step-heading"><span class="step-label">Step 12</span>One error handler, and a filter (9 min)</h3>
+<pre class="code"><code>Add the two error middleware functions from the Quote API at the end of the routes, just above async
+function start(). The error handler now also recognises the two Mongoose errors:</code></pre><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Step 11: DELETE a book (4 min)
+ 
+// DELETE /api/books/:id -&gt; remove a book (204)
+app.delete(&#x27;/api/books/:id&#x27;, async (req, res) =&gt; {
+  const book = await Book.findByIdAndDelete(req.params.id);
+  if (!book) {
+    return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+  }
+  res.status(204).end();
+});
+ 
+findByIdAndDelete returns the deleted document, or null if there was nothing to delete, which 
+gives us the 404.
+Figure 21 — DELETE returns 204, and 404 the second time
+You now have full CRUD on a real database. Run npm run seed whenever you want the six sample 
+books back.
+C H E C K P O I N T
+checkpoints/step-11-delete
+Step 12: One error handler, and a filter (9 min)
+Add the two error middleware functions from the Quote API at the end of the routes, just above async 
+function start(). The error handler now also recognises the two Mongoose errors:
+19</pre></details></section>
+<section class="page" id="page-20"><div class="page-label">第 20 页 / 共 30 页</div><pre class="code"><code>// No route matched: 404</code></pre>
+<pre class="code"><code>app.use((req, res, next) =&gt; {
+  const err = new Error(&#x27;Not Found&#x27;);
+  err.status = 404;
+  next(err);
+});</code></pre>
+<pre class="code"><code>// The error handler (4 parameters): every error ends up here, as JSON</code></pre>
+<pre class="code"><code>app.use((err, req, res, next) =&gt; {
+  if (err.name === &#x27;CastError&#x27;) {
+    return res.status(400).json({ error: { message: &#x27;That is not a valid book id.&#x27; }
+});
+  }
+  if (err.name === &#x27;ValidationError&#x27;) {
+    return res.status(400).json({ error: { message: err.message } });
+  }
+  res.status(err.status || 500).json({ error: { message: err.message } });
+});</code></pre>
+<p>How do errors get here? In Express 5, when an async route throws (or an await fails), Express passes the error to the error handler for you, so the routes need no try/catch. (With try/catch you would call next(err) yourself, as in the Quote API; both work.) Error When Status CastError the id is not a valid ObjectId (/api/books/abc) 400 ValidationErro r the data breaks a schema rule (missing title, pages: -3) 400 bad JSON body express.json() cannot parse it (it sets err.status = 400) 400 no route matched our 404 middleware 404 anything else a real server problem (database down …) 500 Send the two bad requests again:</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>// No route matched: 404
+app.use((req, res, next) =&gt; {
+  const err = new Error(&#x27;Not Found&#x27;);
+  err.status = 404;
+  next(err);
+});
+ 
+// The error handler (4 parameters): every error ends up here, as JSON
+app.use((err, req, res, next) =&gt; {
+  if (err.name === &#x27;CastError&#x27;) {
+    return res.status(400).json({ error: { message: &#x27;That is not a valid book id.&#x27; } 
+});
+  }
+  if (err.name === &#x27;ValidationError&#x27;) {
+    return res.status(400).json({ error: { message: err.message } });
+  }
+  res.status(err.status || 500).json({ error: { message: err.message } });
+});
+ 
+How do errors get here? In Express 5, when an async route throws (or an await fails), Express passes 
+the error to the error handler for you, so the routes need no try/catch. (With try/catch you would 
+call next(err) yourself, as in the Quote API; both work.)
+Error When Status
+CastError the id is not a valid ObjectId (/api/books/abc) 400
+ValidationErro
+r
+the data breaks a schema rule (missing title, pages: -3) 400
+bad JSON body express.json() cannot parse it (it sets err.status = 400) 400
+no route matched our 404 middleware 404
+anything else a real server problem (database down …) 500
+Send the two bad requests again:
+20</pre></details></section>
+<section class="page" id="page-21"><div class="page-label">第 21 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 22<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=21" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>/api/books/abc is now a clear 400</figcaption></figure>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 23<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=21" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>the invalid book is now a 400 with a JSON message</figcaption></figure>
+<p>A filter with a query string. As in the Quote API, the collection route can take options. Change GET /api/books so ?fiction=true (or false) keeps one kind, and sort by title:</p>
+<pre class="code"><code>// GET /api/books -&gt; every book (optional ?fiction=true or ?fiction=false)</code></pre>
+<pre class="code"><code>app.get(&#x27;/api/books&#x27;, async (req, res) =&gt; {
+  const filter = {};
+  if (req.query.fiction) {
+    filter.fiction = req.query.fiction === &#x27;true&#x27;;
+  }
+  const books = await Book.find(filter).sort({ title: 1 });
+  res.json(books);
+});</code></pre>
+<p>The filter object is the same { fiction: true } you typed in mongosh in Step 3. The query string is text (&quot;true&quot;), so we compare it to turn it into a real boolean.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 22 — /api/books/abc is now a clear 400
+Figure 23 — the invalid book is now a 400 with a JSON message
+A filter with a query string. As in the Quote API, the collection route can take options. Change GET 
+/api/books so ?fiction=true (or false) keeps one kind, and sort by title:
+ 
+// GET /api/books -&gt; every book (optional ?fiction=true or ?fiction=false)
+app.get(&#x27;/api/books&#x27;, async (req, res) =&gt; {
+  const filter = {};
+  if (req.query.fiction) {
+    filter.fiction = req.query.fiction === &#x27;true&#x27;;
+  }
+  const books = await Book.find(filter).sort({ title: 1 });
+  res.json(books);
+});
+ 
+The filter object is the same { fiction: true } you typed in mongosh in Step 3. The query string is 
+text (&quot;true&quot;), so we compare it to turn it into a real boolean.
+21</pre></details></section>
+<section class="page" id="page-22"><div class="page-label">第 22 页 / 共 30 页</div><figure class="figure"><div class="figure-box">原 PDF 配图 · 图 24<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=22" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>/api/books?fiction=true</figcaption></figure>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-12-errors-and-filter</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Figure 24 — /api/books?fiction=true
+C H E C K P O I N T
+checkpoints/step-12-errors-and-filter
+22</pre></details></section>
+<section class="page" id="page-23"><div class="page-label">第 23 页 / 共 30 页</div><h2 id="part-Part-E-A-clean-structure">Part E: A clean structure</h2>
+<h3 id="step-13" class="step-heading"><span class="step-label">Step 13</span>Split the API into modules, and allow a React app (10 min)</h3>
+<p>server.js now does everything, and seed.js repeats the schema. Real projects give each job its own file:</p>
+<figure class="figure"><div class="figure-box">原 PDF 配图 · 图 25<a href="MongoDB-and-Mongoose-Step-by-Step.pdf#page=23" target="_blank">在 PDF 中查看原图 ↗</a></div><figcaption>three files, one job each</figcaption></figure>
+<ol><li>Create models/Book.js: the schema and model, exported.</li></ol>
+<pre class="code"><code>// models/Book.js: the Book schema and model</code></pre>
+<pre class="code"><code>const mongoose = require(&#x27;mongoose&#x27;);</code></pre>
+<pre class="code"><code>const bookSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    pages: { type: Number, required: true, min: 1 },
+    fiction: { type: Boolean, default: false }
+  },
+  { timestamps: true }
+);</code></pre>
+<p>module.exports = mongoose.model(&#x27;Book&#x27;, bookSchema);</p>
+<ol><li>Create routes/books.js: an Express Router holding the five routes. A router is a small group of routes that server.js mounts at a path. router.route(path) lets you chain the methods for one path:</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Part E: A clean structure
+Step 13: Split the API into modules, and allow a React app (10 min)
+server.js now does everything, and seed.js repeats the schema. Real projects give each job its 
+own file:
+Figure 25 — three files, one job each
+1. Create models/Book.js: the schema and model, exported.
+ 
+// models/Book.js: the Book schema and model
+const mongoose = require(&#x27;mongoose&#x27;);
+ 
+const bookSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    pages: { type: Number, required: true, min: 1 },
+    fiction: { type: Boolean, default: false }
+  },
+  { timestamps: true }
+);
+ 
+module.exports = mongoose.model(&#x27;Book&#x27;, bookSchema);
+ 
+2. Create routes/books.js: an Express Router holding the five routes. A router is a small group 
+of routes that server.js mounts at a path. router.route(path) lets you chain the methods 
+for one path:
+23</pre></details></section>
+<section class="page" id="page-24"><div class="page-label">第 24 页 / 共 30 页</div><pre class="code"><code>// routes/books.js: every /api/books route</code></pre>
+<pre class="code"><code>const express = require(&#x27;express&#x27;);
+const Book = require(&#x27;../models/Book&#x27;);</code></pre>
+<pre class="code"><code>const router = express.Router();</code></pre>
+<pre class="code"><code>// /api/books</code></pre>
+<pre class="code"><code>router.route(&#x27;/&#x27;)
+  .get(async (req, res) =&gt; {
+    const filter = {};
+    if (req.query.fiction) {
+      filter.fiction = req.query.fiction === &#x27;true&#x27;;
+    }
+    const books = await Book.find(filter).sort({ title: 1 });
+    res.json(books);
+  })
+  .post(async (req, res) =&gt; {
+    const { title, author, pages, fiction } = req.body;
+    const book = await Book.create({ title, author, pages, fiction });
+    res.status(201).json(book);
+  });</code></pre>
+<pre class="code"><code>// /api/books/:id</code></pre>
+<pre class="code"><code>router.route(&#x27;/:id&#x27;)
+  .get(async (req, res) =&gt; {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+    }
+    res.json(book);
+  })
+  .put(async (req, res) =&gt; {
+    const { title, author, pages, fiction } = req.body;
+    const book = await Book.findByIdAndUpdate(
+      req.params.id,
+      { title, author, pages, fiction },
+      { returnDocument: &#x27;after&#x27;, runValidators: true }
+    );
+    if (!book) {
+      return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+    }
+    res.json(book);
+  })
+  .delete(async (req, res) =&gt; {
+    const book = await Book.findByIdAndDelete(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+    }
+    res.status(204).end();
+  });</code></pre>
+<p>module.exports = router;</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>// routes/books.js: every /api/books route
+const express = require(&#x27;express&#x27;);
+const Book = require(&#x27;../models/Book&#x27;);
+ 
+const router = express.Router();
+ 
+// /api/books
+router.route(&#x27;/&#x27;)
+  .get(async (req, res) =&gt; {
+    const filter = {};
+    if (req.query.fiction) {
+      filter.fiction = req.query.fiction === &#x27;true&#x27;;
+    }
+    const books = await Book.find(filter).sort({ title: 1 });
+    res.json(books);
+  })
+  .post(async (req, res) =&gt; {
+    const { title, author, pages, fiction } = req.body;
+    const book = await Book.create({ title, author, pages, fiction });
+    res.status(201).json(book);
+  });
+ 
+// /api/books/:id
+router.route(&#x27;/:id&#x27;)
+  .get(async (req, res) =&gt; {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+    }
+    res.json(book);
+  })
+  .put(async (req, res) =&gt; {
+    const { title, author, pages, fiction } = req.body;
+    const book = await Book.findByIdAndUpdate(
+      req.params.id,
+      { title, author, pages, fiction },
+      { returnDocument: &#x27;after&#x27;, runValidators: true }
+    );
+    if (!book) {
+      return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+    }
+    res.json(book);
+  })
+  .delete(async (req, res) =&gt; {
+    const book = await Book.findByIdAndDelete(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: &#x27;Book not found.&#x27; });
+    }
+    res.status(204).end();
+  });
+ 
+module.exports = router;
+ 
+24</pre></details></section>
+<section class="page" id="page-25"><div class="page-label">第 25 页 / 共 30 页</div><ol><li>Allow a React app to call the API. A React app on localhost:5173 calling localhost:3000 is a request from another origin, which the browser blocks unless the API allows it (CORS). Install the cors package:</li></ol>
+<pre class="code"><code>npm install cors</code></pre>
+<ol><li>Make server.js short: setup, the router, errors, start. Delete the old schema and the old routes from it:</li></ol>
+<pre class="code"><code>// server.js: Book Store API (Express + MongoDB + Mongoose)</code></pre>
+<pre class="code"><code>require(&#x27;dotenv&#x27;).config({ quiet: true });
+const express = require(&#x27;express&#x27;);
+const mongoose = require(&#x27;mongoose&#x27;);
+const cors = require(&#x27;cors&#x27;);
+const bookRoutes = require(&#x27;./routes/books&#x27;);</code></pre>
+<pre class="code"><code>const app = express();
+const port = process.env.PORT || 3000;</code></pre>
+<pre class="code"><code>app.use(cors());            // let a React app on another port call this API
+app.use(express.json());</code></pre>
+<pre class="code"><code>app.get(&#x27;/&#x27;, (req, res) =&gt; {
+  res.json({ message: &#x27;Welcome to the Book Store API&#x27; });
+});</code></pre>
+<pre class="code"><code>app.use(&#x27;/api/books&#x27;, bookRoutes);   // every route in routes/books.js starts
+with /api/books</code></pre>
+<pre class="code"><code>// ... the 404 middleware, the error handler and start() stay exactly as in Step</code></pre>
+<p>12 ...</p>
+<ol><li>In seed.js, replace the copied schema and model with one line:</li></ol>
+<pre class="code"><code>const Book = require(&#x27;./models/Book&#x27;);</code></pre>
+<p>Test everything again (the self-check below). It must all work exactly as before: refactoring changes the structure, not the behaviour.</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>3. Allow a React app to call the API. A React app on localhost:5173 calling localhost:3000 is 
+a request from another origin, which the browser blocks unless the API allows it (CORS). Install the 
+cors package:
+ 
+npm install cors
+ 
+4. Make server.js short: setup, the router, errors, start. Delete the old schema and the old routes 
+from it:
+ 
+// server.js: Book Store API (Express + MongoDB + Mongoose)
+require(&#x27;dotenv&#x27;).config({ quiet: true });
+const express = require(&#x27;express&#x27;);
+const mongoose = require(&#x27;mongoose&#x27;);
+const cors = require(&#x27;cors&#x27;);
+const bookRoutes = require(&#x27;./routes/books&#x27;);
+ 
+const app = express();
+const port = process.env.PORT || 3000;
+ 
+app.use(cors());            // let a React app on another port call this API
+app.use(express.json());
+ 
+app.get(&#x27;/&#x27;, (req, res) =&gt; {
+  res.json({ message: &#x27;Welcome to the Book Store API&#x27; });
+});
+ 
+app.use(&#x27;/api/books&#x27;, bookRoutes);   // every route in routes/books.js starts 
+with /api/books
+ 
+// ... the 404 middleware, the error handler and start() stay exactly as in Step 
+12 ...
+ 
+5. In seed.js, replace the copied schema and model with one line:
+ 
+const Book = require(&#x27;./models/Book&#x27;);
+ 
+Test everything again (the self-check below). It must all work exactly as before: refactoring changes the 
+structure, not the behaviour.
+25</pre></details></section>
+<section class="page" id="page-26"><div class="page-label">第 26 页 / 共 30 页</div><p>E S  M O D U L E S  I N S T E A D  O F  R E Q U I R E ? Some projects (and the older class files) use import and export. Add &quot;type&quot;: &quot;module&quot; to package.json, then write import express from &#x27;express&#x27;;, import Book from &#x27;../models/Book.js&#x27;; (the .js is required) and export default router;. Pick one style per project.</p>
+<aside class="callout"><strong>CHECKPOINT</strong><p>checkpoints/step-13-modules (the same as final/)</p></aside><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>E S  M O D U L E S  I N S T E A D  O F  R E Q U I R E ?
+Some projects (and the older class files) use import and export. Add &quot;type&quot;: &quot;module&quot; to 
+package.json, then write import express from &#x27;express&#x27;;, import Book from 
+&#x27;../models/Book.js&#x27;; (the .js is required) and export default router;. Pick one style per 
+project.
+C H E C K P O I N T
+checkpoints/step-13-modules (the same as final/)
+26</pre></details></section>
+<section class="page" id="page-27"><div class="page-label">第 27 页 / 共 30 页</div><p>Wrap-up Self-check: send every request once Run npm run seed first, so you have the six sample books. # Request Body Expect 1 GET /api/books 200, six books sorted by title 2 GET /api/books? fiction=true 200, three books 3 GET /api/books/&lt;an id&gt; 200, that book 4 GET /api/books/64b7f0c2a1 b2c3d4e5f60718 404, Book not found. 5 GET /api/books/abc 400, That is not a valid book id. 6 POST /api/books { &quot;title&quot;: &quot;…&quot;, &quot;author&quot;: &quot;…&quot;, &quot;pages&quot;: 300 } 201, the book with _id and fiction: false 7 POST /api/books { &quot;title&quot;: &quot;…&quot; } 400, validation message 8 PUT /api/books/&lt;new id&gt; { &quot;title&quot;: &quot;…&quot;, &quot;author&quot;: &quot;…&quot;, &quot;pages&quot;: 0 } 400 (pages must be at least 1) 9 PUT /api/books/&lt;new id&gt; { &quot;pages&quot;: 320 } 200, only pages changed 10 DELETE /api/books/&lt;new id&gt; 204, and again: 404 11 GET /hello 404, { &quot;error&quot;: { &quot;message&quot;: &quot;Not Found&quot; } }</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Wrap-up
+Self-check: send every request once
+Run npm run seed first, so you have the six sample books.
+# Request Body Expect
+1 GET /api/books 200, six books sorted by title
+2 GET /api/books?
+fiction=true
+200, three books
+3 GET /api/books/&lt;an 
+id&gt;
+200, that book
+4 GET 
+/api/books/64b7f0c2a1
+b2c3d4e5f60718
+404, Book not found.
+5 GET /api/books/abc 400, That is not a valid 
+book id.
+6 POST /api/books { &quot;title&quot;: &quot;…&quot;, 
+&quot;author&quot;: &quot;…&quot;, 
+&quot;pages&quot;: 300 }
+201, the book with _id and 
+fiction: false
+7 POST /api/books { &quot;title&quot;: &quot;…&quot; } 400, validation message
+8 PUT /api/books/&lt;new 
+id&gt;
+{ &quot;title&quot;: &quot;…&quot;, 
+&quot;author&quot;: &quot;…&quot;, 
+&quot;pages&quot;: 0 }
+400 (pages must be at least 1)
+9 PUT /api/books/&lt;new 
+id&gt;
+{ &quot;pages&quot;: 320 } 200, only pages changed
+10 DELETE 
+/api/books/&lt;new id&gt;
+204, and again: 404
+11 GET /hello 404, { &quot;error&quot;: 
+{ &quot;message&quot;: &quot;Not Found&quot; 
+} }
+27</pre></details></section>
+<section class="page" id="page-28"><div class="page-label">第 28 页 / 共 30 页</div><p>What you learned Idea In code Keep secrets out of code .env + require(&#x27;dotenv&#x27;).config() + .gitignore Connect, then listen await mongoose.connect(process.env.MONGODB_URI), then app.listen() Rules for documents new mongoose.Schema({ title: { type: String, required: true } }, { timestamps: true }) The collection&#x27;s tool const Book = mongoose.model(&#x27;Book&#x27;, bookSchema) → collection books Read await Book.find(filter).sort(...), await Book.findById(id) (null → 404) Create await Book.create(data) → 201 Update await Book.findByIdAndUpdate(id, data, { returnDocument: &#x27;after&#x27;, runValidators: true }) Delete await Book.findByIdAndDelete(id) → 204 Mongoose errors CastError (bad id) and ValidationError (bad data) → 400 in the error handler Structure models/, routes/ with express.Router(), module.exports / require F R O M  R E C O R D S . J S  T O  M O N G O O S E Put the Quote API next to this one: records.getQuotes() became Book.find(), records.getQuote(id) became Book.findById(id), createQuote became Book.create, and so on. The routes, the status codes and the error handler kept their shape: that is why we hid the data behind records.js in the first place. I F  Y O U  F I N I S H  E A R L Y (1) Add ?author= to GET /api/books (hint: filter.author = req.query.author finds exact matches). (2) Add a genre field to the schema with enum: [&#x27;fantasy&#x27;, &#x27;sci-fi&#x27;, &#x27;programming&#x27;] and see what happens when you POST another genre. (3) Add GET /api/books/count that answers { count: … } with await Book.countDocuments(). Where must that route go in routes/books.js?</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>What you learned
+Idea In code
+Keep secrets out of 
+code
+.env + require(&#x27;dotenv&#x27;).config() + .gitignore
+Connect, then listen await mongoose.connect(process.env.MONGODB_URI), then 
+app.listen()
+Rules for documents new mongoose.Schema({ title: { type: String, required: 
+true } }, { timestamps: true })
+The collection&#x27;s tool const Book = mongoose.model(&#x27;Book&#x27;, bookSchema) → collection 
+books
+Read await Book.find(filter).sort(...), await Book.findById(id) 
+(null → 404)
+Create await Book.create(data) → 201
+Update await Book.findByIdAndUpdate(id, data, { returnDocument: 
+&#x27;after&#x27;, runValidators: true })
+Delete await Book.findByIdAndDelete(id) → 204
+Mongoose errors CastError (bad id) and ValidationError (bad data) → 400 in the error 
+handler
+Structure models/, routes/ with express.Router(), module.exports / require
+F R O M  R E C O R D S . J S  T O  M O N G O O S E
+Put the Quote API next to this one: records.getQuotes() became Book.find(), 
+records.getQuote(id) became Book.findById(id), createQuote became Book.create, and so 
+on. The routes, the status codes and the error handler kept their shape: that is why we hid the data 
+behind records.js in the first place.
+I F  Y O U  F I N I S H  E A R L Y
+(1) Add ?author= to GET /api/books (hint: filter.author = req.query.author finds exact 
+matches). (2) Add a genre field to the schema with enum: [&#x27;fantasy&#x27;, &#x27;sci-fi&#x27;, 
+&#x27;programming&#x27;] and see what happens when you POST another genre. (3) Add GET 
+/api/books/count that answers { count: … } with await Book.countDocuments(). Where 
+must that route go in routes/books.js?
+28</pre></details></section>
+<section class="page" id="page-29"><div class="page-label">第 29 页 / 共 30 页</div><p>Troubleshooting You see Usually because Fix The uri parameter to openUri() must be a string, got &quot;undefined&quot; no .env, a typo in MONGODB_URI, or dotenv not loaded first check the file name .env, the variable name, and that require(&#x27;dotenv&#x27;).config() is the first line bad auth : authentication failed wrong database user or password use the database user from Step 2 (not your Atlas login); reset its password in Atlas › Database Access connect ETIMEDOUT / Server selection timed out your IP address is not allowed Atlas › Network Access: add your current IP (or 0.0.0.0/0 for class) ECONNREFUSED 127.0.0.1:27017 local MongoDB is not running start it (brew services start mongodb-community on a Mac, the MongoDB service on Windows) localhost does not connect, 127.0.0.1 does Node prefers IPv6 for localhost write mongodb://127.0.0.1:27017/ ... Data goes to a database called test no database name in the connection string add /bookstore after .mongodb.net [] although you seeded the server and seed use different strings, or the model name differs same .env; model name &#x27;Book&#x27; → collection books The old book comes back after PUT returnDocument: &#x27;after&#x27; is missing add it to the options 500 HTML page for bad data the error handler is missing or not last Step 12: put both middleware after the routes Your .env is on GitHub .gitignore was added too late change the database user&#x27;s password in Atlas now, then git rm --cached .env</p><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Troubleshooting
+You see Usually because Fix
+The uri parameter to 
+openUri() must be a 
+string, got &quot;undefined&quot;
+no .env, a typo in 
+MONGODB_URI, or dotenv not 
+loaded first
+check the file name .env, the 
+variable name, and that 
+require(&#x27;dotenv&#x27;).config() 
+is the first line
+bad auth : 
+authentication failed
+wrong database user or 
+password
+use the database user from Step 2 
+(not your Atlas login); reset its 
+password in Atlas › Database 
+Access
+connect ETIMEDOUT / 
+Server selection timed 
+out
+your IP address is not allowed Atlas › Network Access: add your 
+current IP (or 0.0.0.0/0 for 
+class)
+ECONNREFUSED 
+127.0.0.1:27017
+local MongoDB is not running start it (brew services start 
+mongodb-community on a Mac, 
+the MongoDB service on 
+Windows)
+localhost does not connect, 
+127.0.0.1 does
+Node prefers IPv6 for 
+localhost
+write 
+mongodb://127.0.0.1:27017/
+...
+Data goes to a database called 
+test
+no database name in the 
+connection string
+add /bookstore after 
+.mongodb.net
+[] although you seeded the server and seed use different 
+strings, or the model name 
+differs
+same .env; model name &#x27;Book&#x27; 
+→ collection books
+The old book comes back after 
+PUT
+returnDocument: &#x27;after&#x27; is 
+missing
+add it to the options
+500 HTML page for bad data the error handler is missing or 
+not last
+Step 12: put both middleware 
+after the routes
+Your .env is on GitHub .gitignore was added too late change the database user&#x27;s 
+password in Atlas now, then git 
+rm --cached .env
+29</pre></details></section>
+<section class="page" id="page-30"><div class="page-label">第 30 页 / 共 30 页</div><p>Appendix: Put the API online (Render) When the API works locally, you can host it for free so a deployed React app can use it.</p>
+<ol><li>Push the project to a GitHub repository. Check that .env and node_modules/ are not in it.</li><li>On render.com, create a Web Service from that repository with: Setting Value Runtime Node Build Command npm install Start Command node server.js (not npm start: --watch is for development) Environment variables MONGODB_URI = your Atlas connection string (Render sets PORT itself)</li><li>In Atlas › Network Access, allow 0.0.0.0/0, because Render&#x27;s addresses change.</li><li>Deploy, then open https://&lt;your-service&gt;.onrender.com/api/books. The free plan sleeps when idle, so the first request after a break can take about a minute. Other hosts (Vercel, Railway, Fly.io) follow the same idea: the code from GitHub, the secret as an environment variable, and Atlas allowing the host to connect.</li></ol><details class="raw"><summary>查看本页原始文本（完整提取）</summary><pre>Appendix: Put the API online (Render)
+When the API works locally, you can host it for free so a deployed React app can use it.
+1. Push the project to a GitHub repository. Check that .env and node_modules/ are not in it.
+2. On render.com, create a Web Service from that repository with:
+Setting Value
+Runtime Node
+Build Command npm install
+Start Command node server.js (not npm start: --watch is for development)
+Environment 
+variables
+MONGODB_URI = your Atlas connection string (Render sets PORT itself)
+3. In Atlas › Network Access, allow 0.0.0.0/0, because Render&#x27;s addresses change.
+4. Deploy, then open https://&lt;your-service&gt;.onrender.com/api/books. The free plan 
+sleeps when idle, so the first request after a break can take about a minute.
+Other hosts (Vercel, Railway, Fly.io) follow the same idea: the code from GitHub, the secret as an 
+environment variable, and Atlas allowing the host to connect.
+30</pre></details></section>
+  </main>
+
+  <footer>本页由原始 PDF 逐页提取生成：正文按标题、步骤、代码与提示重新排版；每页末尾保留完整原始文本以便核对。原 PDF 中的配图以占位框标注，并提供跳转到对应 PDF 页码的链接。</footer>
+</div>
+</body>
+</html>
