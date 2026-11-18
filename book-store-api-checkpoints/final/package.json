@@ -1,0 +1,16 @@
+{
+  "name": "book-store-api",
+  "version": "1.0.0",
+  "description": "CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --watch server.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "mongoose": "^9.0.0"
+  }
+}

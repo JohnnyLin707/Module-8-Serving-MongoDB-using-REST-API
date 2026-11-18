@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REST API 步进式代码详解 · 项目列表</title>
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #121821; --panel-2: #161f2b;
+    --line: #263244; --text: #dce6f2; --muted: #8ea0b8;
+    --cyan: #38bdf8; --amber: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 70px 24px; }
+  h1 { font-size: 32px; margin: 0 0 10px; }
+  .sub { color: var(--muted); margin: 0 0 40px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card {
+    display: block; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 24px; color: var(--text); text-decoration: none;
+    transition: transform .15s, border-color .15s;
+  }
+  .card:hover { transform: translateY(-3px); }
+  .card.cyan:hover { border-color: var(--cyan); }
+  .card.amber:hover { border-color: var(--amber); }
+  .card .kicker { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+  .card h2 { font-size: 21px; margin: 10px 0 12px; }
+  .card.cyan h2 { color: var(--cyan); }
+  .card.amber h2 { color: var(--amber); }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .card .go { display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 600; }
+  .card.cyan .go { color: var(--cyan); }
+  .card.amber .go { color: var(--amber); }
+  @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>REST API 步进式代码详解</h1>
+  <p class="sub">两个项目已拆分为独立页面，请选择查看：</p>
+  <div class="cards">
+    <a class="card cyan" href="quote-api.html">
+      <div class="kicker">PROJECT 01 · 15 CHECKPOINTS</div>
+      <h2>quote-api-checkpoints</h2>
+      <p>JSON 文件模拟数据库版 REST API：从规划路由到统一错误处理，逐步学习 Express 与 REST 语义。</p>
+      <span class="go">打开页面 →</span>
+    </a>
+    <a class="card amber" href="book-store.html">
+      <div class="kicker">PROJECT 02 · 10 CHECKPOINTS</div>
+      <h2>book-store-api-checkpoints</h2>
+      <p>MongoDB / Mongoose 版 REST API：从连接数据库到模块化拆分，逐步学习真实数据持久化。</p>
+      <span class="go">打开页面 →</span>
+    </a>
+  </div>
+</div>
+</body>
+</html>

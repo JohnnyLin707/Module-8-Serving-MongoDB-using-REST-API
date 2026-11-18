@@ -1,0 +1,12 @@
+{
+  "name": "quote-api",
+  "version": "1.0.0",
+  "description": "CSIS 3380 Module 9: a REST API for famous quotes, built with Express",
+  "main": "app.js",
+  "scripts": {
+    "start": "node --watch app.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

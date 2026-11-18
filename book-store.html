@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>book-store-api-checkpoints · 步进式代码详解</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121821;
+    --panel-2: #161f2b;
+    --line: #263244;
+    --text: #dce6f2;
+    --muted: #8ea0b8;
+    --green: #4ade80;
+    --code-bg: #080c11;
+    --accent: #38bdf8;
+    --accent-bg: rgba(8, 32, 44, .95);
+    --accent-line: #1d4a5e;
+  }
+  body.amber {
+    --accent: #fbbf24;
+    --accent-bg: rgba(45, 32, 8, .95);
+    --accent-line: #5e4a1d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.65;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+  .back { font-size: 13px; color: var(--muted); }
+  h1 { font-size: 30px; margin: 10px 0 8px; color: var(--accent); }
+  .sub { color: var(--muted); margin: 0; font-size: 15px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
+  button, .jump {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 13px; font-size: 13px; cursor: pointer;
+  }
+  button:hover, .jump:hover { border-color: var(--accent); color: var(--accent); }
+  .legend { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .nav {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 26px;
+    padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  }
+  .chip {
+    font-size: 12px; color: var(--muted); border: 1px solid var(--line);
+    border-radius: 999px; padding: 3px 10px; white-space: nowrap;
+  }
+  .chip:hover { color: var(--accent); border-color: var(--accent); }
+  .col-head {
+    position: sticky; top: 0; z-index: 5; padding: 12px 18px; border-radius: 12px;
+    border: 1px solid var(--accent-line); margin-bottom: 16px;
+    background: var(--accent-bg); backdrop-filter: blur(10px);
+  }
+  .col-head h2 { margin: 0; font-size: 17px; color: var(--accent); }
+  .col-head p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+  .step {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; margin-bottom: 18px; scroll-margin-top: 86px;
+  }
+  .step-head { display: flex; gap: 14px; align-items: flex-start; border-bottom: 1px dashed var(--line); padding-bottom: 14px; }
+  .step-num {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    display: grid; place-items: center; font-weight: 700; font-size: 14px; color: var(--accent);
+  }
+  .step h3 { margin: 1px 0 6px; font-size: 17px; }
+  .dir { font-size: 12px; font-weight: 400; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; }
+  .note { margin: 14px 0 0; padding: 12px 14px; border-radius: 9px; border-left: 3px solid; }
+  .note h4 { margin: 0 0 6px; font-size: 13px; letter-spacing: .3px; }
+  .note ul { margin: 0; padding-left: 20px; }
+  .note li { margin: 3px 0; font-size: 13.5px; }
+  .note-add { background: rgba(74, 222, 128, .06); border-color: var(--green); }
+  .note-add h4 { color: var(--green); }
+  .note-why { background: rgba(56, 189, 248, .06); border-color: var(--accent); }
+  .note-why h4 { color: var(--accent); }
+  body.amber .note-why { background: rgba(251, 191, 36, .06); }
+  .files-title { margin: 18px 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .files-title span { font-weight: 400; opacity: .7; }
+  .file { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: var(--code-bg); }
+  .file summary {
+    cursor: pointer; padding: 8px 12px; background: var(--panel-2);
+    display: flex; align-items: center; gap: 8px; font-size: 13px; list-style: none;
+  }
+  .file summary::-webkit-details-marker { display: none; }
+  .file summary::before { content: "▸"; color: var(--muted); font-size: 11px; }
+  .file[open] summary::before { content: "▾"; }
+  .file-icon { color: var(--green); font-family: ui-monospace, monospace; font-size: 11px; }
+  .file-name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .file-lang { color: var(--muted); font-size: 11px; }
+  .same { margin-left: auto; color: #64748b; font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; }
+  pre.code {
+    margin: 0; padding: 14px 16px; overflow-x: auto; background: var(--code-bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  }
+  code { font-family: inherit; }
+  .note code { background: var(--code-bg); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
+  .c-comment { color: #6a9955; }
+  .c-string { color: #ce9178; }
+  .c-keyword { color: #c586c0; }
+  .c-number { color: #b5cea8; }
+  footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); margin-top: 34px; padding-top: 18px; }
+  @media (max-width: 700px) {
+    .col-head { position: static; }
+    .legend { margin-left: 0; }
+  }
+</style>
+</head>
+<body class="amber">
+<div class="wrap">
+  <header class="hero">
+    <a class="back" href="index.html">← 返回项目列表</a>
+    <h1>book-store-api-checkpoints · 步进式代码详解</h1>
+    <p class="sub">从连接 MongoDB 出发，用 Mongoose 的 Schema / Model 操作真实数据库，逐步补齐 CRUD、筛选排序、错误处理，最后拆分为路由与模型模块并加入 CORS。每个 step 都标注中文说明与完整代码。</p>
+    <div class="toolbar">
+      <button onclick="setAll(true)">展开全部代码</button>
+      <button onclick="setAll(false)">收起全部代码</button>
+      <a class="jump" href="#book-store-api-checkpoints-final">跳到最终版</a>
+      <span class="legend">点击文件名可展开 / 折叠代码；「与上一版相同」的文件仍保留完整内容。</span>
+    </div>
+  </header>
+
+  <nav class="nav"><a class="chip" href="#book-store-api-checkpoints-step-05-connect">01 连接 MongoDB</a>
+<a class="chip" href="#book-store-api-checkpoints-step-06-schema-model">02 定义 Schema 与 Model</a>
+<a class="chip" href="#book-store-api-checkpoints-step-07-seed">03 种子数据脚本</a>
+<a class="chip" href="#book-store-api-checkpoints-step-08-read">04 读取图书列表与详情</a>
+<a class="chip" href="#book-store-api-checkpoints-step-09-create">05 创建图书 POST</a>
+<a class="chip" href="#book-store-api-checkpoints-step-10-update">06 更新图书 PUT</a>
+<a class="chip" href="#book-store-api-checkpoints-step-11-delete">07 删除图书 DELETE</a>
+<a class="chip" href="#book-store-api-checkpoints-step-12-errors-and-filter">08 筛选排序 + 错误处理</a>
+<a class="chip" href="#book-store-api-checkpoints-step-13-modules">09 拆分模块 + CORS</a>
+<a class="chip" href="#book-store-api-checkpoints-final">10 最终定稿</a></nav>
+
+  <div class="col-head">
+    <h2>book-store-api-checkpoints</h2>
+    <p>共 10 个 checkpoint · 按学习顺序从上到下阅读</p>
+  </div>
+
+  <main>
+
+      <article class="step" id="book-store-api-checkpoints-step-05-connect">
+        <div class="step-head">
+          <div class="step-num">01</div>
+          <div class="step-title-wrap">
+            <h3>连接 MongoDB <span class="dir">step-05-connect</span></h3>
+            <div class="tags"><span class="tag">起始</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>用 <code>dotenv</code> 读取 <code>.env</code> 中的连接串，引入 Express 与 Mongoose。</li>
+        <li><code>start()</code> 中先 <code>await mongoose.connect()</code>，成功后再 <code>app.listen()</code>；失败打印错误并退出进程。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>连接串属于配置信息，不能写死在源码里，否则易泄露且换环境要改代码。</li>
+        <li>数据库连不上时启动 HTTP 服务没有意义，所以把「连接成功」作为监听的前置条件。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>4 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-06-schema-model">
+        <div class="step-head">
+          <div class="step-num">02</div>
+          <div class="step-title-wrap">
+            <h3>定义 Schema 与 Model <span class="dir">step-06-schema-model</span></h3>
+            <div class="tags"><span class="tag">数据模型</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>新增 <code>bookSchema</code>：title / author 必填且 trim，pages 必填且最小 1，fiction 默认 false，并开启 timestamps。</li>
+        <li>用 <code>mongoose.model(&#x27;Book&#x27;, bookSchema)</code> 编译出操作集合的 <code>Book</code> 模型。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>Schema 把数据规则集中声明一次，Mongoose 会在读写时自动校验、去空格、补默认值。</li>
+        <li>Model 提供 <code>find/create/findByIdAndUpdate</code> 等方法，是路由与数据库之间的接口。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>4 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-07-seed">
+        <div class="step-head">
+          <div class="step-num">03</div>
+          <div class="step-title-wrap">
+            <h3>种子数据脚本 <span class="dir">step-07-seed</span></h3>
+            <div class="tags"><span class="tag">工具脚本</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>新增 <code>seed.js</code>：复用相同 Schema，先 <code>deleteMany({})</code> 清空，再 <code>insertMany(books)</code> 插入 6 本示例书。</li>
+        <li><code>package.json</code> 提供 <code>npm run seed</code> 脚本。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>开发 REST API 需要稳定可重复的测试数据，seed 让每次初始化结果一致。</li>
+        <li>脚本末尾必须 <code>mongoose.disconnect()</code>，否则数据库连接会让 Node 进程一直不退出。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>5 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// the same schema and model as in server.js</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+));
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-08-read">
+        <div class="step-head">
+          <div class="step-num">04</div>
+          <div class="step-title-wrap">
+            <h3>读取图书列表与详情 <span class="dir">step-08-read</span></h3>
+            <div class="tags"><span class="tag">读取</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>新增 <code>GET /api/books</code>（<code>Book.find()</code>）和 <code>GET /api/books/:id</code>（<code>Book.findById()</code>）。</li>
+        <li>查不到时返回 404。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>Mongoose 查询返回 thenable / Promise，可以直接 <code>await</code>，代码和 quote 线的 async 数据层很像。</li>
+        <li>用 <code>/api</code> 前缀区分数据接口和首页路由，便于以后接前端或做权限控制。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>5 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// the same schema and model as in server.js</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+));
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// GET /api/books -&gt; every book</span>
+app.get(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find();
+  res.json(books);
+});
+
+<span class="c-comment">// GET /api/books/:id -&gt; one book, or 404</span>
+app.get(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-09-create">
+        <div class="step-head">
+          <div class="step-num">05</div>
+          <div class="step-title-wrap">
+            <h3>创建图书 POST <span class="dir">step-09-create</span></h3>
+            <div class="tags"><span class="tag">写入</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>新增 <code>POST /api/books</code>：从 <code>req.body</code> 解构四个字段，调用 <code>Book.create()</code>，返回 201。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>显式解构字段可以过滤客户端多传的属性，只让白名单字段进入数据库。</li>
+        <li>Schema 的 required / min 等规则会在 <code>create()</code> 时自动生效，不必在路由里重写校验。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>5 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// the same schema and model as in server.js</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+));
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// GET /api/books -&gt; every book</span>
+app.get(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find();
+  res.json(books);
+});
+
+<span class="c-comment">// GET /api/books/:id -&gt; one book, or 404</span>
+app.get(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// POST /api/books -&gt; create a book (201)</span>
+app.post(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.create({ title, author, pages, fiction });
+  res.status(<span class="c-number">201</span>).json(book);
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-10-update">
+        <div class="step-head">
+          <div class="step-num">06</div>
+          <div class="step-title-wrap">
+            <h3>更新图书 PUT <span class="dir">step-10-update</span></h3>
+            <div class="tags"><span class="tag">更新</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>新增 <code>PUT /api/books/:id</code>，使用 <code>findByIdAndUpdate</code>。</li>
+        <li>选项 <code>returnDocument: &#x27;after&#x27;</code> 返回更新后的文档，<code>runValidators: true</code> 让更新也走 Schema 校验。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>一次数据库调用完成「更新 + 取回新值」，比先查再存更简洁。</li>
+        <li>Mongoose 默认更新不触发校验，显式开启才能防止写入不合法数据。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>5 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// the same schema and model as in server.js</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+));
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// GET /api/books -&gt; every book</span>
+app.get(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find();
+  res.json(books);
+});
+
+<span class="c-comment">// GET /api/books/:id -&gt; one book, or 404</span>
+app.get(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// POST /api/books -&gt; create a book (201)</span>
+app.post(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.create({ title, author, pages, fiction });
+  res.status(<span class="c-number">201</span>).json(book);
+});
+
+<span class="c-comment">// PUT /api/books/:id -&gt; update a book, send back the new version</span>
+app.put(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndUpdate(
+    req.params.id,
+    { title, author, pages, fiction },
+    { returnDocument: <span class="c-string">&#x27;after&#x27;</span>, runValidators: <span class="c-keyword">true</span> }   <span class="c-comment">// send back the updated book; check the schema rules</span>
+  );
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-11-delete">
+        <div class="step-head">
+          <div class="step-num">07</div>
+          <div class="step-title-wrap">
+            <h3>删除图书 DELETE <span class="dir">step-11-delete</span></h3>
+            <div class="tags"><span class="tag">删除</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>新增 <code>DELETE /api/books/:id</code>，用 <code>findByIdAndDelete</code>；找不到返回 404，成功返回 204。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>和读取/更新共用同一套「找不到 → 404」约定，客户端处理逻辑统一。</li>
+        <li>204 不返回内容，符合 REST 对删除成功的常见约定。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>5 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// the same schema and model as in server.js</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+));
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// GET /api/books -&gt; every book</span>
+app.get(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find();
+  res.json(books);
+});
+
+<span class="c-comment">// GET /api/books/:id -&gt; one book, or 404</span>
+app.get(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// POST /api/books -&gt; create a book (201)</span>
+app.post(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.create({ title, author, pages, fiction });
+  res.status(<span class="c-number">201</span>).json(book);
+});
+
+<span class="c-comment">// PUT /api/books/:id -&gt; update a book, send back the new version</span>
+app.put(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndUpdate(
+    req.params.id,
+    { title, author, pages, fiction },
+    { returnDocument: <span class="c-string">&#x27;after&#x27;</span>, runValidators: <span class="c-keyword">true</span> }   <span class="c-comment">// send back the updated book; check the schema rules</span>
+  );
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// DELETE /api/books/:id -&gt; remove a book (204)</span>
+app.delete(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndDelete(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.status(<span class="c-number">204</span>).end();
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-12-errors-and-filter">
+        <div class="step-head">
+          <div class="step-num">08</div>
+          <div class="step-title-wrap">
+            <h3>筛选排序 + 错误处理 <span class="dir">step-12-errors-and-filter</span></h3>
+            <div class="tags"><span class="tag">查询/错误</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li><code>GET /api/books</code> 支持 <code>?fiction=true|false</code> 过滤，并按 title 升序排序。</li>
+        <li>新增兜底 404 中间件和全局错误中间件；<code>CastError</code>、<code>ValidationError</code> 转成 400。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>把查询条件组装成对象传给 <code>find(filter)</code>，可选条件不会污染基础查询。</li>
+        <li>非法 ObjectId 和字段校验失败都是客户端输入问题，返回 400 比 500 更准确。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>5 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// the same schema and model as in server.js</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+));
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// Book Store API: Express + MongoDB + Mongoose</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });   <span class="c-comment">// reads .env into process.env</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-comment">// ---------------------------------------------------------------- the model</span>
+<span class="c-comment">// A schema describes what every book document must look like</span>
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }   <span class="c-comment">// adds createdAt and updatedAt</span>
+);
+
+<span class="c-comment">// The model is the tool we use to read and write the &quot;books&quot; collection</span>
+<span class="c-keyword">const</span> Book = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(express.json());   <span class="c-comment">// reads JSON request bodies into req.body</span>
+
+<span class="c-comment">// A first route, to check the server is up</span>
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+<span class="c-comment">// GET /api/books -&gt; every book (optional ?fiction=true or ?fiction=false)</span>
+app.get(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> filter = {};
+  <span class="c-keyword">if</span> (req.query.fiction) {
+    filter.fiction = req.query.fiction === <span class="c-string">&#x27;true&#x27;</span>;
+  }
+  <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find(filter).sort({ title: <span class="c-number">1</span> });
+  res.json(books);
+});
+
+<span class="c-comment">// GET /api/books/:id -&gt; one book, or 404</span>
+app.get(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// POST /api/books -&gt; create a book (201)</span>
+app.post(<span class="c-string">&#x27;/api/books&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.create({ title, author, pages, fiction });
+  res.status(<span class="c-number">201</span>).json(book);
+});
+
+<span class="c-comment">// PUT /api/books/:id -&gt; update a book, send back the new version</span>
+app.put(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndUpdate(
+    req.params.id,
+    { title, author, pages, fiction },
+    { returnDocument: <span class="c-string">&#x27;after&#x27;</span>, runValidators: <span class="c-keyword">true</span> }   <span class="c-comment">// send back the updated book; check the schema rules</span>
+  );
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.json(book);
+});
+
+<span class="c-comment">// DELETE /api/books/:id -&gt; remove a book (204)</span>
+app.delete(<span class="c-string">&#x27;/api/books/:id&#x27;</span>, <span class="c-keyword">async</span> (req, res) =&gt; {
+  <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndDelete(req.params.id);
+  <span class="c-keyword">if</span> (!book) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+  }
+  res.status(<span class="c-number">204</span>).end();
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- errors</span>
+<span class="c-comment">// No route matched: 404</span>
+app.use((req, res, next) =&gt; {
+  <span class="c-keyword">const</span> err = <span class="c-keyword">new</span> Error(<span class="c-string">&#x27;Not Found&#x27;</span>);
+  err.status = <span class="c-number">404</span>;
+  next(err);
+});
+
+<span class="c-comment">// The error handler (4 parameters): every error ends up here, as JSON</span>
+app.use((err, req, res, next) =&gt; {
+  <span class="c-keyword">if</span> (err.name === <span class="c-string">&#x27;CastError&#x27;</span>) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">400</span>).json({ error: { message: <span class="c-string">&#x27;That is not a valid book id.&#x27;</span> } });
+  }
+  <span class="c-keyword">if</span> (err.name === <span class="c-string">&#x27;ValidationError&#x27;</span>) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">400</span>).json({ error: { message: err.message } });
+  }
+  res.status(err.status || <span class="c-number">500</span>).json({ error: { message: err.message } });
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-step-13-modules">
+        <div class="step-head">
+          <div class="step-num">09</div>
+          <div class="step-title-wrap">
+            <h3>拆分模块 + CORS <span class="dir">step-13-modules</span></h3>
+            <div class="tags"><span class="tag">工程化</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>拆成 <code>server.js</code>、<code>routes/books.js</code>、<code>models/Book.js</code>；<code>seed.js</code> 改为复用模型文件。</li>
+        <li>新增 <code>cors</code> 依赖并挂载 <code>app.use(cors())</code>，路由通过 <code>app.use(&#x27;/api/books&#x27;, bookRoutes)</code> 接入。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>文件和职责一一对应，代码量增长后仍容易定位、测试和维护。</li>
+        <li>seed 与 server 共用同一个模型，避免两处 Schema 定义不一致；CORS 让不同端口的前端可以调用 API。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>7 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">models/Book.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// models/Book.js: the Book schema and model</span>
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+);
+
+<span class="c-keyword">module</span>.<span class="c-keyword">exports</span> = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;cors&quot;</span>: <span class="c-string">&quot;^2.8.5&quot;</span>,
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">routes/books.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// routes/books.js: every /api/books route</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> Book = <span class="c-keyword">require</span>(<span class="c-string">&#x27;../models/Book&#x27;</span>);
+
+<span class="c-keyword">const</span> router = express.Router();
+
+<span class="c-comment">// /api/books</span>
+router.route(<span class="c-string">&#x27;/&#x27;</span>)
+  .get(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> filter = {};
+    <span class="c-keyword">if</span> (req.query.fiction) {
+      filter.fiction = req.query.fiction === <span class="c-string">&#x27;true&#x27;</span>;
+    }
+    <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find(filter).sort({ title: <span class="c-number">1</span> });
+    res.json(books);
+  })
+  .post(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.create({ title, author, pages, fiction });
+    res.status(<span class="c-number">201</span>).json(book);
+  });
+
+<span class="c-comment">// /api/books/:id</span>
+router.route(<span class="c-string">&#x27;/:id&#x27;</span>)
+  .get(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+    <span class="c-keyword">if</span> (!book) {
+      <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+    }
+    res.json(book);
+  })
+  .put(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndUpdate(
+      req.params.id,
+      { title, author, pages, fiction },
+      { returnDocument: <span class="c-string">&#x27;after&#x27;</span>, runValidators: <span class="c-keyword">true</span> }
+    );
+    <span class="c-keyword">if</span> (!book) {
+      <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+    }
+    res.json(book);
+  })
+  .delete(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndDelete(req.params.id);
+    <span class="c-keyword">if</span> (!book) {
+      <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+    }
+    res.status(<span class="c-number">204</span>).end();
+  });
+
+<span class="c-keyword">module</span>.<span class="c-keyword">exports</span> = router;
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+<span class="c-keyword">const</span> Book = <span class="c-keyword">require</span>(<span class="c-string">&#x27;./models/Book&#x27;</span>);
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span></summary>
+          <pre class="code"><code><span class="c-comment">// server.js: Book Store API (Express + MongoDB + Mongoose)</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+<span class="c-keyword">const</span> cors = <span class="c-keyword">require</span>(<span class="c-string">&#x27;cors&#x27;</span>);
+<span class="c-keyword">const</span> bookRoutes = <span class="c-keyword">require</span>(<span class="c-string">&#x27;./routes/books&#x27;</span>);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(cors());            <span class="c-comment">// let a React app on another port call this API</span>
+app.use(express.json());
+
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+app.use(<span class="c-string">&#x27;/api/books&#x27;</span>, bookRoutes);   <span class="c-comment">// every route in routes/books.js starts with /api/books</span>
+
+<span class="c-comment">// ---------------------------------------------------------------- errors</span>
+<span class="c-comment">// No route matched: 404</span>
+app.use((req, res, next) =&gt; {
+  <span class="c-keyword">const</span> err = <span class="c-keyword">new</span> Error(<span class="c-string">&#x27;Not Found&#x27;</span>);
+  err.status = <span class="c-number">404</span>;
+  next(err);
+});
+
+<span class="c-comment">// The error handler (4 parameters): every error ends up here, as JSON</span>
+app.use((err, req, res, next) =&gt; {
+  <span class="c-keyword">if</span> (err.name === <span class="c-string">&#x27;CastError&#x27;</span>) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">400</span>).json({ error: { message: <span class="c-string">&#x27;That is not a valid book id.&#x27;</span> } });
+  }
+  <span class="c-keyword">if</span> (err.name === <span class="c-string">&#x27;ValidationError&#x27;</span>) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">400</span>).json({ error: { message: err.message } });
+  }
+  res.status(err.status || <span class="c-number">500</span>).json({ error: { message: err.message } });
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+
+      <article class="step" id="book-store-api-checkpoints-final">
+        <div class="step-head">
+          <div class="step-num">10</div>
+          <div class="step-title-wrap">
+            <h3>最终定稿 <span class="dir">final</span></h3>
+            <div class="tags"><span class="tag">定稿</span></div>
+          </div>
+        </div>
+        <section class="note note-add">
+          <h4>比上一步新增了什么</h4>
+          <ul>
+        <li>与 <code>step-13-modules</code> 完全相同，作为可直接运行的最终参考版本。</li>
+          </ul>
+        </section>
+        <section class="note note-why">
+          <h4>为什么要这样写</h4>
+          <ul>
+        <li>定稿版本便于从任意 checkpoint 跳回，逐段核对自己写的代码。</li>
+          </ul>
+        </section>
+        <div class="files-title">本步完整代码 <span>7 个文件</span></div>
+        <div class="files">
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.env.example</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code># Copy this file to .env and paste YOUR connection string (Step 4).
+# MongoDB Atlas (cloud): replace &lt;username&gt;, &lt;password&gt; and the cluster address with yours.
+MONGODB_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@&lt;cluster-address&gt;.mongodb.net/bookstore?retryWrites=true&amp;w=majority
+# Local MongoDB instead:  MONGODB_URI=mongodb://127.0.0.1:27017/bookstore
+PORT=3000
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">.gitignore</span><span class="file-lang">text</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>node_modules/
+.env
+.DS_Store
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">models/Book.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// models/Book.js: the Book schema and model</span>
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+
+<span class="c-keyword">const</span> bookSchema = <span class="c-keyword">new</span> mongoose.Schema(
+  {
+    title: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    author: { type: String, required: <span class="c-keyword">true</span>, trim: <span class="c-keyword">true</span> },
+    pages: { type: Number, required: <span class="c-keyword">true</span>, min: <span class="c-number">1</span> },
+    fiction: { type: Boolean, default: <span class="c-keyword">false</span> }
+  },
+  { timestamps: <span class="c-keyword">true</span> }
+);
+
+<span class="c-keyword">module</span>.<span class="c-keyword">exports</span> = mongoose.model(<span class="c-string">&#x27;Book&#x27;</span>, bookSchema);
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">package.json</span><span class="file-lang">json</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code>{
+  <span class="c-string">&quot;name&quot;</span>: <span class="c-string">&quot;book-store-api&quot;</span>,
+  <span class="c-string">&quot;version&quot;</span>: <span class="c-string">&quot;1.0.0&quot;</span>,
+  <span class="c-string">&quot;description&quot;</span>: <span class="c-string">&quot;CSIS 3380: a REST API for a book store, built with Express, MongoDB and Mongoose&quot;</span>,
+  <span class="c-string">&quot;main&quot;</span>: <span class="c-string">&quot;server.js&quot;</span>,
+  <span class="c-string">&quot;scripts&quot;</span>: {
+    <span class="c-string">&quot;start&quot;</span>: <span class="c-string">&quot;node --watch server.js&quot;</span>,
+    <span class="c-string">&quot;seed&quot;</span>: <span class="c-string">&quot;node seed.js&quot;</span>
+  },
+  <span class="c-string">&quot;dependencies&quot;</span>: {
+    <span class="c-string">&quot;cors&quot;</span>: <span class="c-string">&quot;^2.8.5&quot;</span>,
+    <span class="c-string">&quot;dotenv&quot;</span>: <span class="c-string">&quot;^17.2.0&quot;</span>,
+    <span class="c-string">&quot;express&quot;</span>: <span class="c-string">&quot;^5.1.0&quot;</span>,
+    <span class="c-string">&quot;mongoose&quot;</span>: <span class="c-string">&quot;^9.0.0&quot;</span>
+  }
+}
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">routes/books.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// routes/books.js: every /api/books route</span>
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> Book = <span class="c-keyword">require</span>(<span class="c-string">&#x27;../models/Book&#x27;</span>);
+
+<span class="c-keyword">const</span> router = express.Router();
+
+<span class="c-comment">// /api/books</span>
+router.route(<span class="c-string">&#x27;/&#x27;</span>)
+  .get(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> filter = {};
+    <span class="c-keyword">if</span> (req.query.fiction) {
+      filter.fiction = req.query.fiction === <span class="c-string">&#x27;true&#x27;</span>;
+    }
+    <span class="c-keyword">const</span> books = <span class="c-keyword">await</span> Book.find(filter).sort({ title: <span class="c-number">1</span> });
+    res.json(books);
+  })
+  .post(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.create({ title, author, pages, fiction });
+    res.status(<span class="c-number">201</span>).json(book);
+  });
+
+<span class="c-comment">// /api/books/:id</span>
+router.route(<span class="c-string">&#x27;/:id&#x27;</span>)
+  .get(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findById(req.params.id);
+    <span class="c-keyword">if</span> (!book) {
+      <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+    }
+    res.json(book);
+  })
+  .put(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> { title, author, pages, fiction } = req.body;
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndUpdate(
+      req.params.id,
+      { title, author, pages, fiction },
+      { returnDocument: <span class="c-string">&#x27;after&#x27;</span>, runValidators: <span class="c-keyword">true</span> }
+    );
+    <span class="c-keyword">if</span> (!book) {
+      <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+    }
+    res.json(book);
+  })
+  .delete(<span class="c-keyword">async</span> (req, res) =&gt; {
+    <span class="c-keyword">const</span> book = <span class="c-keyword">await</span> Book.findByIdAndDelete(req.params.id);
+    <span class="c-keyword">if</span> (!book) {
+      <span class="c-keyword">return</span> res.status(<span class="c-number">404</span>).json({ message: <span class="c-string">&#x27;Book not found.&#x27;</span> });
+    }
+    res.status(<span class="c-number">204</span>).end();
+  });
+
+<span class="c-keyword">module</span>.<span class="c-keyword">exports</span> = router;
+</code></pre>
+        </details>
+        <details class="file" >
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">seed.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// seed.js: fill the books collection with sample data.  Run:  npm run seed</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+<span class="c-keyword">const</span> Book = <span class="c-keyword">require</span>(<span class="c-string">&#x27;./models/Book&#x27;</span>);
+
+<span class="c-keyword">const</span> books = [
+  { title: <span class="c-string">&#x27;Clean Code&#x27;</span>, author: <span class="c-string">&#x27;Robert C. Martin&#x27;</span>, pages: <span class="c-number">464</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Pragmatic Programmer&#x27;</span>, author: <span class="c-string">&#x27;David Thomas&#x27;</span>, pages: <span class="c-number">352</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;Eloquent JavaScript&#x27;</span>, author: <span class="c-string">&#x27;Marijn Haverbeke&#x27;</span>, pages: <span class="c-number">472</span>, fiction: <span class="c-keyword">false</span> },
+  { title: <span class="c-string">&#x27;The Hobbit&#x27;</span>, author: <span class="c-string">&#x27;J.R.R. Tolkien&#x27;</span>, pages: <span class="c-number">310</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Dune&#x27;</span>, author: <span class="c-string">&#x27;Frank Herbert&#x27;</span>, pages: <span class="c-number">412</span>, fiction: <span class="c-keyword">true</span> },
+  { title: <span class="c-string">&#x27;Project Hail Mary&#x27;</span>, author: <span class="c-string">&#x27;Andy Weir&#x27;</span>, pages: <span class="c-number">476</span>, fiction: <span class="c-keyword">true</span> }
+];
+
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> seed() {
+  <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+  <span class="c-keyword">await</span> Book.deleteMany({});                 <span class="c-comment">// start from an empty collection</span>
+  <span class="c-keyword">const</span> saved = <span class="c-keyword">await</span> Book.insertMany(books);
+  console.log(<span class="c-string">`Added ${saved.length} books`</span>);
+  <span class="c-keyword">await</span> mongoose.disconnect();               <span class="c-comment">// a script must close the connection to finish</span>
+}
+
+seed().<span class="c-keyword">catch</span>((err) =&gt; {
+  console.error(err.message);
+  process.exit(<span class="c-number">1</span>);
+});
+</code></pre>
+        </details>
+        <details class="file" open>
+          <summary><span class="file-icon">&lt;/&gt;</span><span class="file-name">server.js</span><span class="file-lang">javascript</span><span class="same">与上一版相同</span></summary>
+          <pre class="code"><code><span class="c-comment">// server.js: Book Store API (Express + MongoDB + Mongoose)</span>
+<span class="c-keyword">require</span>(<span class="c-string">&#x27;dotenv&#x27;</span>).config({ quiet: <span class="c-keyword">true</span> });
+<span class="c-keyword">const</span> express = <span class="c-keyword">require</span>(<span class="c-string">&#x27;express&#x27;</span>);
+<span class="c-keyword">const</span> mongoose = <span class="c-keyword">require</span>(<span class="c-string">&#x27;mongoose&#x27;</span>);
+<span class="c-keyword">const</span> cors = <span class="c-keyword">require</span>(<span class="c-string">&#x27;cors&#x27;</span>);
+<span class="c-keyword">const</span> bookRoutes = <span class="c-keyword">require</span>(<span class="c-string">&#x27;./routes/books&#x27;</span>);
+
+<span class="c-keyword">const</span> app = express();
+<span class="c-keyword">const</span> port = process.env.PORT || <span class="c-number">3000</span>;
+
+app.use(cors());            <span class="c-comment">// let a React app on another port call this API</span>
+app.use(express.json());
+
+app.get(<span class="c-string">&#x27;/&#x27;</span>, (req, res) =&gt; {
+  res.json({ message: <span class="c-string">&#x27;Welcome to the Book Store API&#x27;</span> });
+});
+
+app.use(<span class="c-string">&#x27;/api/books&#x27;</span>, bookRoutes);   <span class="c-comment">// every route in routes/books.js starts with /api/books</span>
+
+<span class="c-comment">// ---------------------------------------------------------------- errors</span>
+<span class="c-comment">// No route matched: 404</span>
+app.use((req, res, next) =&gt; {
+  <span class="c-keyword">const</span> err = <span class="c-keyword">new</span> Error(<span class="c-string">&#x27;Not Found&#x27;</span>);
+  err.status = <span class="c-number">404</span>;
+  next(err);
+});
+
+<span class="c-comment">// The error handler (4 parameters): every error ends up here, as JSON</span>
+app.use((err, req, res, next) =&gt; {
+  <span class="c-keyword">if</span> (err.name === <span class="c-string">&#x27;CastError&#x27;</span>) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">400</span>).json({ error: { message: <span class="c-string">&#x27;That is not a valid book id.&#x27;</span> } });
+  }
+  <span class="c-keyword">if</span> (err.name === <span class="c-string">&#x27;ValidationError&#x27;</span>) {
+    <span class="c-keyword">return</span> res.status(<span class="c-number">400</span>).json({ error: { message: err.message } });
+  }
+  res.status(err.status || <span class="c-number">500</span>).json({ error: { message: err.message } });
+});
+
+<span class="c-comment">// ---------------------------------------------------------------- start</span>
+<span class="c-comment">// Connect to MongoDB first; only then start listening for requests</span>
+<span class="c-keyword">async</span> <span class="c-keyword">function</span> start() {
+  <span class="c-keyword">try</span> {
+    <span class="c-keyword">await</span> mongoose.connect(process.env.MONGODB_URI);
+    console.log(<span class="c-string">&#x27;Connected to MongoDB&#x27;</span>);
+    app.listen(port, () =&gt; {
+      console.log(<span class="c-string">`Book Store API listening on http://localhost:${port}`</span>);
+    });
+  } <span class="c-keyword">catch</span> (err) {
+    console.error(<span class="c-string">&#x27;Could not connect to MongoDB:&#x27;</span>, err.message);
+    process.exit(<span class="c-number">1</span>);
+  }
+}
+
+start();
+</code></pre>
+        </details>
+        </div>
+      </article>
+  </main>
+
+  <footer>所有代码块均直接读取自对应 step 文件夹的原始文件，未删减内容（系统文件 .DS_Store 除外）。</footer>
+</div>
+<script>
+  function setAll(open) {
+    document.querySelectorAll('details.file').forEach(function (d) { d.open = open; });
+  }
+</script>
+</body>
+</html>
